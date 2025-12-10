@@ -3,4 +3,79 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"/>
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    tools:context=".ui.fragments.QuizFragment">
+
+    <TextView
+        android:id="@+id/text_pontuacao"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Pontuação: 0"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <TextView
+        android:id="@+id/text_pergunta"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="64dp"
+        android:textSize="20sp"
+        android:textStyle="italic"
+        android:textAlignment="center"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Pergunta de Exemplo: O que significa 'phishing' na segurança da informação?" />
+
+    <LinearLayout
+        android:id="@+id/layout_opcoes"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginTop="32dp"
+        app:layout_constraintTop_toBottomOf="@id/text_pergunta"
+        app:layout_constraintBottom_toTopOf="@id/layout_resultado"
+        app:layout_constraintVertical_bias="0.1">
+
+        <Button android:id="@+id/button_opcao_a" style="@style/Widget.MaterialComponents.Button.OutlinedButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginVertical="8dp" tools:text="Opção A" />
+        <Button android:id="@+id/button_opcao_b" style="@style/Widget.MaterialComponents.Button.OutlinedButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginVertical="8dp" tools:text="Opção B" />
+        <Button android:id="@+id/button_opcao_c" style="@style/Widget.MaterialComponents.Button.OutlinedButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginVertical="8dp" tools:text="Opção C" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/layout_resultado"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="QUIZ CONCLUÍDO!"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:id="@+id/text_resultado_final"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="20sp"
+            tools:text="Sua pontuação final é: 30 pontos."
+            android:layout_marginBottom="32dp" />
+
+        <Button
+            android:id="@+id/button_reiniciar_quiz"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Reiniciar Quiz" />
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

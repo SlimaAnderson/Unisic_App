@@ -29,4 +29,31 @@
         android:label="Cursos"
         tools:layout="@layout/fragment_cursos" />
 
+    <fragment
+        android:id="@+id/cursosFragment"
+        android:name="com.example.unisic_app.ui.fragments.CursosFragment"
+        android:label="Cursos"
+        tools:layout="@layout/fragment_cursos">
+
+        <action
+            android:id="@+id/action_cursosFragment_to_cursoDetalheFragment"
+            app:destination="@id/cursoDetalheFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/cursoDetalheFragment"
+        android:name="com.example.unisic_app.ui.fragments.CursoDetalheFragment"
+        android:label="{moduloTitulo}"
+        tools:layout="@layout/fragment_curso_detalhe">
+
+        <argument
+            android:name="moduloId"
+            app:argType="integer"
+            android:defaultValue="0" />
+        <argument
+            android:name="moduloTitulo"
+            app:argType="string"
+            android:defaultValue="Detalhe do Curso" />
+    </fragment>
+
 </navigation>

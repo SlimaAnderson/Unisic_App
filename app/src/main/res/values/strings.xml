@@ -1,3 +1,6 @@
 <resources>
     <string name="app_name">Unisic_App</string>
+
+    <string name="quiz_final_score">Sua pontuação final é: %1$d de %2$d pontos.</string>
+    <string name="quiz_score">Pontuação: %d</string>
 </resources>
