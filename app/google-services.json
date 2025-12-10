@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "796124088386",
+    "project_id": "unisic-app",
+    "storage_bucket": "unisic-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:796124088386:android:8d32f5e20fe26d9477c5db",
+        "android_client_info": {
+          "package_name": "com.example.unisic_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCLQs5u37HhwXZU9FaOUK8RlcjE8gjlAhI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
