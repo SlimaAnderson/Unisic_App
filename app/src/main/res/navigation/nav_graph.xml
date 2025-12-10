@@ -27,12 +27,6 @@
         android:id="@+id/cursosFragment"
         android:name="com.example.unisic_app.ui.fragments.CursosFragment"
         android:label="Cursos"
-        tools:layout="@layout/fragment_cursos" />
-
-    <fragment
-        android:id="@+id/cursosFragment"
-        android:name="com.example.unisic_app.ui.fragments.CursosFragment"
-        android:label="Cursos"
         tools:layout="@layout/fragment_cursos">
 
         <action
