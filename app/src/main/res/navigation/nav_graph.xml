@@ -18,12 +18,6 @@
         tools:layout="@layout/fragment_quiz" />
 
     <fragment
-        android:id="@+id/comunidadeFragment"
-        android:name="com.example.unisic_app.ui.fragments.ComunidadeFragment"
-        android:label="Comunidade"
-        tools:layout="@layout/fragment_comunidade" />
-
-    <fragment
         android:id="@+id/cursosFragment"
         android:name="com.example.unisic_app.ui.fragments.CursosFragment"
         android:label="Cursos"
@@ -49,5 +43,36 @@
             app:argType="string"
             android:defaultValue="Detalhe do Curso" />
     </fragment>
+
+    <fragment
+        android:id="@+id/comunidadeFragment"
+        android:name="com.example.unisic_app.ui.fragments.ComunidadeFragment"
+        android:label="Comunidade"
+        tools:layout="@layout/fragment_comunidade">
+
+        <action
+            android:id="@+id/action_comunidadeFragment_to_postagemDetalheFragment"
+            app:destination="@id/postagemDetalheFragment" /> <action
+        android:id="@+id/action_comunidadeFragment_to_novaPostagemFragment"
+        app:destination="@id/novaPostagemFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/postagemDetalheFragment"
+        android:name="com.example.unisic_app.ui.fragments.PostagemDetalheFragment"
+        android:label="Detalhes da Postagem"
+        tools:layout="@layout/fragment_postagem_detalhe">
+
+        <argument
+            android:name="postId"
+            app:argType="string"
+            android:defaultValue="0" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/novaPostagemFragment"
+        android:name="com.example.unisic_app.ui.fragments.NovaPostagemFragment"
+        android:label="Nova Postagem"
+        tools:layout="@layout/fragment_nova_postagem" />
 
 </navigation>

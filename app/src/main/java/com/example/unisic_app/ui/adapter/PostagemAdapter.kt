@@ -4,13 +4,17 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.navigation.NavController
 import androidx.recyclerview.widget.RecyclerView
 import com.example.unisic_app.R
 import com.example.unisic_app.data.model.Postagem
+import android.os.Bundle
+import androidx.core.os.bundleOf
 
-class PostagemAdapter(private val listaPostagens: List<Postagem>) :
-    RecyclerView.Adapter<PostagemAdapter.PostagemViewHolder>() {
-
+class PostagemAdapter(
+    private var listaPostagens: List<Postagem>,
+    private val navController: NavController // 🌟 Este é o parâmetro que o Fragment agora deve fornecer
+) : RecyclerView.Adapter<PostagemAdapter.PostagemViewHolder>() {
     class PostagemViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val autor: TextView = itemView.findViewById(R.id.text_post_autor)
         val data: TextView = itemView.findViewById(R.id.text_post_data)
@@ -30,7 +34,24 @@ class PostagemAdapter(private val listaPostagens: List<Postagem>) :
         holder.data.text = postagem.data
         holder.conteudo.text = postagem.texto
 
-        // No MVP, apenas exibe. Futuramente, adicionaria a navegação para a thread completa.
+        // Lógica de clique para NAVEGAR
+        holder.itemView.setOnClickListener {
+            val bundle = Bundle().apply {
+                // 🌟 Passa o ID do documento Firestore (que será o ID do Post)
+                putString("postId", postagem.id)
+            }
+
+            navController.navigate(
+                R.id.action_comunidadeFragment_to_postagemDetalheFragment, // 🌟 NOVA AÇÃO
+                bundle
+            )
+        }
+    }
+
+    // 🌟 NOVO MÉTODO: Para atualizar a lista a partir do LiveData
+    fun updateList(newList: List<Postagem>) {
+        listaPostagens = newList
+        notifyDataSetChanged() // Notifica o RecyclerView sobre a mudança
     }
 
     override fun getItemCount(): Int = listaPostagens.size
