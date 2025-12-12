@@ -16,8 +16,8 @@ class PostagemAdapter(
     private val navController: NavController // 🌟 Este é o parâmetro que o Fragment agora deve fornecer
 ) : RecyclerView.Adapter<PostagemAdapter.PostagemViewHolder>() {
     class PostagemViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val titulo: TextView = itemView.findViewById(R.id.text_post_titulo) // 🌟 NOVO CAMPO
         val autor: TextView = itemView.findViewById(R.id.text_post_autor)
-        val data: TextView = itemView.findViewById(R.id.text_post_data)
         val conteudo: TextView = itemView.findViewById(R.id.text_post_conteudo)
     }
 
@@ -31,7 +31,11 @@ class PostagemAdapter(
         val postagem = listaPostagens[position]
 
         holder.autor.text = postagem.autor
-        holder.data.text = postagem.data
+        holder.conteudo.text = postagem.texto
+        holder.titulo.text = postagem.titulo
+
+        holder.autor.text = "Por: ${postagem.autor} | ${postagem.data}"
+
         holder.conteudo.text = postagem.texto
 
         // Lógica de clique para NAVEGAR
