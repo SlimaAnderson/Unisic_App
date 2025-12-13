@@ -1,8 +1,7 @@
-// ui/fragments/SubmitQuestionFragment.kt
-
 package com.example.unisic_app.ui.fragments
 
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
@@ -30,6 +29,7 @@ class SubmitQuestionFragment : Fragment(R.layout.fragment_submit_question) {
     private lateinit var inputOptionB: EditText
     private lateinit var inputOptionC: EditText
     private lateinit var inputOptionD: EditText
+    // 🌟 CORREÇÃO 1: Removida a referência incorreta a RadioGroup
 
     // Views dos Botões de Rádio e Controles
     private lateinit var radioA: RadioButton
@@ -38,7 +38,7 @@ class SubmitQuestionFragment : Fragment(R.layout.fragment_submit_question) {
     private lateinit var radioD: RadioButton
     private lateinit var buttonSubmit: Button
 
-    // Variável para rastrear o ID do Radio Button selecionado
+    // 🌟 CORREÇÃO 2: Variável de estado global reintroduzida para rastrear o clique manual
     private var checkedRadioId: Int = -1
 
     // Lista de layouts clicáveis e radio buttons para gerenciamento
@@ -49,7 +49,6 @@ class SubmitQuestionFragment : Fragment(R.layout.fragment_submit_question) {
         super.onViewCreated(view, savedInstanceState)
 
         // 1. Mapeamento de Views
-        // OBS: Estes IDs agora existem no XML corrigido.
         textCreatorNick = view.findViewById(R.id.text_creator_nick)
         inputQuestionText = view.findViewById(R.id.input_question_text)
 
@@ -57,6 +56,8 @@ class SubmitQuestionFragment : Fragment(R.layout.fragment_submit_question) {
         inputOptionB = view.findViewById(R.id.input_option_b)
         inputOptionC = view.findViewById(R.id.input_option_c)
         inputOptionD = view.findViewById(R.id.input_option_d)
+
+        // 🌟 CORREÇÃO 3: Removido o mapeamento incorreto da RadioGroup
 
         radioA = view.findViewById(R.id.radio_a)
         radioB = view.findViewById(R.id.radio_b)
@@ -84,23 +85,25 @@ class SubmitQuestionFragment : Fragment(R.layout.fragment_submit_question) {
 
     /**
      * Gerencia a seleção exclusiva de Radio Buttons quando o usuário clica no LinearLayout pai.
-     * Isso resolve a falha de detecção do RadioGroup nativo.
+     * Atualiza a variável de estado global para a validação.
      */
     private fun setOptionListeners() {
-        layoutOptions.forEachIndexed { index, layout ->
-            layout.setOnClickListener {
-                val clickedRadio = radioButtons[index]
-
-                // Desmarca todos os outros manualmente
-                radioButtons.forEach { radio ->
-                    if (radio != clickedRadio) {
-                        radio.isChecked = false
+        radioButtons.forEach { radio ->
+            radio.setOnClickListener {
+                // Ao clicar diretamente no RadioButton, garantimos que apenas este é selecionado
+                checkedRadioId = it.id // Atualiza o ID global
+                radioButtons.forEach { otherRadio ->
+                    if (otherRadio.id != it.id) {
+                        otherRadio.isChecked = false
                     }
                 }
+            }
+        }
 
-                // Marca o clicado e atualiza o ID rastreado
-                clickedRadio.isChecked = true
-                checkedRadioId = clickedRadio.id // Atualiza o ID global
+        // Mantém a lógica de clique no layout pai para facilitar a usabilidade
+        layoutOptions.forEachIndexed { index, layout ->
+            layout.setOnClickListener {
+                radioButtons[index].performClick()
             }
         }
     }
@@ -127,29 +130,36 @@ class SubmitQuestionFragment : Fragment(R.layout.fragment_submit_question) {
             inputOptionD.text.toString().trim()
         )
 
-        // 1. Validação de Conteúdo (Textos)
-        if (questionText.isEmpty() || options.any { it.isEmpty() } || currentNickname == null) {
-            Toast.makeText(context, "Preencha todos os campos de texto.", Toast.LENGTH_SHORT).show()
+        // 🌟 CORREÇÃO 4: Usa a variável de estado global atualizada pelos listeners
+        val selectedRadioId = checkedRadioId
+
+        // 1. Validação de Campos Vazios
+        if (questionText.isEmpty() || options.any { it.isEmpty() }) {
+            Toast.makeText(context, "Preencha todos os campos da pergunta e opções.", Toast.LENGTH_SHORT).show()
             return
         }
 
-        // 2. Validação e Determinação do Índice Correto
-        // Se o checkedRadioId for -1 (inicial) ou não corresponder a um ID válido,
-        // ele cairá no "else", mostrando a mensagem de erro.
-        val correctAnswerIndex = when (checkedRadioId) {
+        // 2. Determinar o índice correto e Validação da Seleção
+        val correctAnswerIndex = when (selectedRadioId) {
             R.id.radio_a -> 0
             R.id.radio_b -> 1
             R.id.radio_c -> 2
             R.id.radio_d -> 3
             else -> {
+                // Se checkedRadioId for -1 (nenhum RadioButton selecionado), a validação falha aqui.
                 Toast.makeText(context, "Por favor, selecione a resposta correta (A, B, C ou D).", Toast.LENGTH_SHORT).show()
                 return
             }
         }
 
-        val creator = currentNickname!!
+        // Validação de Nickname
+        val creator = currentNickname
+        if (creator == null) {
+            Toast.makeText(context, "Erro: Usuário não autenticado ou apelido não carregado.", Toast.LENGTH_LONG).show()
+            return
+        }
 
-        // 3. Criar e Submeter
+        // 3. Criar e Submeter o objeto Pergunta
         val newQuestion = Pergunta(
             questionText = questionText,
             options = options,
@@ -162,10 +172,11 @@ class SubmitQuestionFragment : Fragment(R.layout.fragment_submit_question) {
         buttonSubmit.isEnabled = false
         repository.submitUserQuestion(newQuestion,
             onSuccess = {
-                Toast.makeText(context, "Pergunta submetida com sucesso! Redirecionando...", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, "Pergunta submetida com sucesso!", Toast.LENGTH_LONG).show()
                 findNavController().popBackStack()
             },
             onFailure = { e ->
+                Log.e("SubmitQuestion", "Erro ao salvar: ${e.message}")
                 Toast.makeText(context, "Erro ao salvar: ${e.message}", Toast.LENGTH_LONG).show()
                 buttonSubmit.isEnabled = true
             }

@@ -4,4 +4,7 @@
     <string name="quiz_final_score">Parabéns! Você acertou %d de %d perguntas!</string>
     <string name="quiz_timer">Tempo: %d s</string>
     <string name="quiz_question_and_creator">%1$s\n(Criada por: @%2$s)</string>
+    <string name="curso_status_nao_iniciado">Status: Não iniciado</string>
+    <string name="curso_status_concluido">Status: CONCLUÍDO!</string>
+    <string name="curso_status_progresso">Status: Em progresso (Última seção: %1$s)</string>
 </resources>

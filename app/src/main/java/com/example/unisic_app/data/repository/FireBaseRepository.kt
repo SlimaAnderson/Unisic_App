@@ -8,6 +8,7 @@ import com.example.unisic_app.data.model.Comentario
 import com.example.unisic_app.data.model.User
 import com.example.unisic_app.data.model.Profile
 import com.example.unisic_app.data.model.VagaEmprego
+import com.example.unisic_app.data.model.Progresso
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.firestore
@@ -15,6 +16,7 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -461,7 +463,9 @@ class FirebaseRepository {
             }
     }
 
-
+    /**
+     * Retorna a lista estática de módulos de curso.
+     */
     fun getModulosCurso(): List<ModuloCurso> {
         // Dados de exemplo para a lista de Módulos
         return listOf(
@@ -470,7 +474,87 @@ class FirebaseRepository {
         )
     }
 
+    /**
+     * Busca um módulo de curso estático por ID.
+     */
     fun getModuloCurso(id: Int): ModuloCurso? {
         return getModulosCurso().find { it.id == id }
+    }
+
+// =======================================================================
+// V. FUNÇÕES DE PROGRESSO (CURSOS) 🌟 ADICIONADAS
+// =======================================================================
+
+    /**
+     * Caminho: users/{userId}/progresso/{moduleId}
+     * Salva o estado atual de progresso de um módulo (última seção vista).
+     */
+    fun saveCourseProgress(
+        userId: String,
+        progress: Progresso,
+        onSuccess: () -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        if (userId.isEmpty() || progress.moduleId.isEmpty()) {
+            onFailure(Exception("UserID ou ModuleID inválido."))
+            return
+        }
+
+        db.collection("users").document(userId)
+            .collection("progresso").document(progress.moduleId)
+            // Usamos set(progress) para criar ou atualizar o documento
+            .set(progress)
+            .addOnSuccessListener {
+                onSuccess()
+            }
+            .addOnFailureListener(onFailure)
+    }
+
+    /**
+     * Recupera todos os registros de progresso para um usuário.
+     */
+    fun getProgressForUser(
+        userId: String,
+        onSuccess: (List<Progresso>) -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        if (userId.isEmpty()) {
+            onFailure(Exception("UserID inválido."))
+            return
+        }
+
+        db.collection("users").document(userId)
+            .collection("progresso")
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                val progressList = querySnapshot.documents.mapNotNull { document ->
+                    document.toObject(Progresso::class.java)
+                }
+                onSuccess(progressList)
+            }
+            .addOnFailureListener(onFailure)
+    }
+
+    fun getCourseProgress(
+        userId: String,
+        moduleId: String,
+        onSuccess: (Progresso?) -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        // 1. Obter a referência ao documento de progresso
+        // (A estrutura pode variar, mas assumindo uma coleção 'progressos' dentro do documento do usuário)
+        val db = FirebaseFirestore.getInstance()
+        db.collection("usuarios")
+            .document(userId)
+            .collection("progressos")
+            .document(moduleId)
+            .get()
+            .addOnSuccessListener { documentSnapshot ->
+                val progresso = documentSnapshot.toObject(Progresso::class.java)
+                onSuccess(progresso)
+            }
+            .addOnFailureListener { exception ->
+                onFailure(exception)
+            }
     }
 }

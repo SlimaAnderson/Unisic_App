@@ -56,6 +56,12 @@
             android:name="moduloTitulo"
             app:argType="string"
             android:defaultValue="Detalhe do Curso" />
+
+        <argument
+            android:name="isAlreadyCompleted"
+            app:argType="boolean"
+            android:defaultValue="false" />
+
     </fragment>
 
     <fragment
