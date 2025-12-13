@@ -7,6 +7,7 @@ import com.example.unisic_app.data.model.Postagem
 import com.example.unisic_app.data.model.Comentario
 import com.example.unisic_app.data.model.User
 import com.example.unisic_app.data.model.Profile
+import com.example.unisic_app.data.model.VagaEmprego
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.firestore
@@ -325,34 +326,141 @@ class FirebaseRepository {
             }
     }
 
+
     // =======================================================================
-    // II. DADOS ESTÁTICOS (MANUTENÇÃO) - Restaurados
-    // =======================================================================
+// III. FUNÇÕES DA TELA HOME (NOTÍCIAS E VAGAS - FIRESTORE)
+// =======================================================================
 
-    fun getPostagensForum(): List<Postagem> {
-        return listOf(
-            Postagem(autor = "Admin", texto = "Bem-vindos à comunidade UNISIC!", data = "01/12/2025"),
-            Postagem(autor = "Maria S.", texto = "Alguém tem uma boa recomendação de Gerenciador de Senhas gratuito?", data = "03/12/2025")
-        )
+    /**
+     * Configura um listener em tempo real para a coleção "noticias",
+     * ordenando pela data mais recente.
+     */
+    fun getNoticiasRealtime(onUpdate: (List<Noticia>) -> Unit): ListenerRegistration {
+        return db.collection("noticias")
+            // Ordena por data (assumindo que "data" é um Timestamp ou String consistente)
+            .orderBy("data", Query.Direction.DESCENDING)
+            .addSnapshotListener { snapshot, e ->
+                if (e != null) {
+                    println("Erro ao ouvir notícias: $e")
+                    // Se houver falha, pode retornar uma lista vazia ou logs de erro
+                    onUpdate(emptyList())
+                    return@addSnapshotListener
+                }
+
+                if (snapshot != null) {
+                    // Mapeia os documentos para a data class Noticia
+                    val noticias = snapshot.documents.mapNotNull { document ->
+                        // O ID do documento é injetado no modelo
+                        document.toObject(Noticia::class.java)?.copy(id = document.id)
+                    }
+                    onUpdate(noticias)
+                }
+            }
+
     }
 
-    fun getNoticias(): List<Noticia> {
-        // Dados de exemplo para a tela de Notícias
-        return listOf(
-            Noticia("n1", "Novo golpe de Pix via WhatsApp - Alerta!", "http://link.para.noticia1"),
-            Noticia("n2", "Falha de segurança crítica encontrada no Chrome", "http://link.para.noticia2"),
-            Noticia("n3", "Melhores práticas de senhas para 2025", "http://link.para.noticia3")
-        )
+    /**
+     * Busca a lista de vagas de emprego UMA VEZ (não em tempo real).
+     */
+    fun getVagasEmpregoOnce(onSuccess: (List<VagaEmprego>) -> Unit, onFailure: (Exception) -> Unit) {
+        db.collection("vagas")
+            .orderBy("dataPublicacao", Query.Direction.DESCENDING)
+            .get() // Usa get() em vez de addSnapshotListener
+            .addOnSuccessListener { snapshot ->
+                val vagas = snapshot.documents.mapNotNull { document ->
+                    // Assumindo que você tem a data class VagaEmprego
+                    document.toObject(VagaEmprego::class.java)?.copy(id = document.id)
+                }
+                onSuccess(vagas)
+            }
+            .addOnFailureListener { e ->
+                onFailure(e)
+            }
     }
 
-    fun getPerguntas(): List<Pergunta> {
-        // Dados de exemplo para o Questionário
-        return listOf(
-            Pergunta(1, "Qual o maior risco do Phishing?", listOf("Perder acesso Wi-Fi", "Roubo de credenciais ou dados", "Bateria viciar mais rápido"), "Roubo de credenciais ou dados"),
-            Pergunta(2, "O que é Autenticação de Dois Fatores (2FA)?", listOf("Usar duas senhas", "Usar senha e um código temporário", "Usar o celular para ligar"), "Usar senha e um código temporário"),
-            Pergunta(3, "Qual o melhor lugar para salvar senhas?", listOf("Bloco de notas do celular", "Post-it no monitor", "Gerenciador de Senhas criptografado"), "Gerenciador de Senhas criptografado")
-        )
+    /**
+     * Configura um listener em tempo real para a coleção "vagas",
+     * ordenando pela data de publicação mais recente.
+     */
+    fun getVagasEmpregoRealtime(onUpdate: (List<VagaEmprego>) -> Unit): ListenerRegistration {
+        return db.collection("vagas")
+            // Ordena pela data de publicação
+            .orderBy("dataPublicacao", Query.Direction.DESCENDING)
+            .addSnapshotListener { snapshot, e ->
+                if (e != null) {
+                    println("Erro ao ouvir vagas: $e")
+                    onUpdate(emptyList())
+                    return@addSnapshotListener
+                }
+
+                if (snapshot != null) {
+                    // Mapeia os documentos para a data class VagaEmprego
+                    val vagas = snapshot.documents.mapNotNull { document ->
+                        document.toObject(VagaEmprego::class.java)?.copy(id = document.id)
+                    }
+                    onUpdate(vagas)
+                }
+            }
     }
+
+    fun getNoticiasOnce(onSuccess: (List<Noticia>) -> Unit, onFailure: (Exception) -> Unit) {
+        db.collection("noticias")
+            .orderBy("data", Query.Direction.DESCENDING)
+            .get() // Usa get() em vez de addSnapshotListener
+            .addOnSuccessListener { snapshot ->
+                val noticias = snapshot.documents.mapNotNull { document ->
+                    document.toObject(Noticia::class.java)?.copy(id = document.id)
+                }
+                onSuccess(noticias)
+            }
+            .addOnFailureListener { e ->
+                onFailure(e)
+            }
+    }
+
+// =======================================================================
+// IV. FUNÇÕES DO QUIZ (FIREBASE FIRESTORE - Coleção 'perguntas')
+// =======================================================================
+
+    /**
+     * Busca todas as perguntas do Quiz uma única vez para iniciar uma sessão.
+     */
+    fun getQuizQuestionsOnce(
+        onSuccess: (List<Pergunta>) -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        db.collection("perguntas") // Coleção confirmada
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val perguntas = snapshot.documents.mapNotNull { document ->
+                    // Mapeia os documentos para a data class Pergunta
+                    document.toObject(Pergunta::class.java)?.copy(id = document.id)
+                }
+                onSuccess(perguntas)
+            }
+            .addOnFailureListener { e ->
+                onFailure(e)
+            }
+    }
+
+    /**
+     * Salva uma nova pergunta criada por um usuário na coleção 'perguntas'.
+     */
+    fun submitUserQuestion(
+        question: Pergunta,
+        onSuccess: () -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        db.collection("perguntas")
+            .add(question)
+            .addOnSuccessListener {
+                onSuccess()
+            }
+            .addOnFailureListener { e ->
+                onFailure(e)
+            }
+    }
+
 
     fun getModulosCurso(): List<ModuloCurso> {
         // Dados de exemplo para a lista de Módulos

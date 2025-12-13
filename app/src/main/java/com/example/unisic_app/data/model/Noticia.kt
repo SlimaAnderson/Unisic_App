@@ -1,8 +1,9 @@
 package com.example.unisic_app.data.model
 
-// Modelo para notícias da tela Home
+// data/model/Noticia.kt
 data class Noticia(
     val id: String? = null,
     val titulo: String = "",
-    val link: String = ""
+    val url: String = "", // Link para a notícia completa
+    val data: String = ""
 )

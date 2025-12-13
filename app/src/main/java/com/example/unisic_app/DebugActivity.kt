@@ -10,11 +10,14 @@ import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.example.unisic_app.MainActivity // Certifique-se de que este import existe
 
 class DebugActivity : AppCompatActivity() {
 
     private lateinit var textLog: TextView
     private val logMessages = StringBuilder()
+
+    // Variável do Repositório (Mantida apenas uma vez)
     private val repository = FirebaseRepository()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,6 +37,8 @@ class DebugActivity : AppCompatActivity() {
         // Inicia os testes de componentes
         log("Iniciando testes de integração...")
         testFirebaseInitialization()
+
+        // 🌟 CORREÇÃO: Chama a função que contém a lógica de teste assíncrona
         testStaticDataLoading()
     }
 
@@ -64,25 +69,42 @@ class DebugActivity : AppCompatActivity() {
         }
     }
 
+    // 🌟 CORREÇÃO: Função reconstruída para testes assíncronos do Firestore
     private fun testStaticDataLoading() {
-        try {
-            // 1. Teste de Notícias
-            val noticias = repository.getNoticias()
-            log("- Carregando Notícias: ${noticias.size} itens. Status: OK")
+        log("-> Iniciando teste de carregamento de Notícias (Firestore)...")
 
-            // 3. Teste de Perguntas do Quiz
-            val perguntas = repository.getPerguntas()
-            log("- Carregando Perguntas do Quiz: ${perguntas.size} itens. Status: OK")
+        repository.getNoticiasOnce(
+            onSuccess = { noticias ->
+                val count = noticias.size
+                log("-> Notícias carregadas: ${count} itens. [SUCESSO]")
 
-            // 4. Teste de Módulos de Cursos
-            val modulos = repository.getModulosCurso()
-            log("- Carregando Módulos de Cursos: ${modulos.size} itens. Status: OK")
+                // Testa o carregamento de Vagas em seguida (se necessário)
+                testVagasLoading()
+            },
+            onFailure = { e ->
+                log("[ERRO] Falha na leitura de Notícias: ${e.message}")
+                log("Verifique se há dados na coleção 'noticias' no Firestore.")
+                log("Testes de conteúdo estático concluídos. Clique para iniciar o app.")
+            }
+        )
+    }
 
-        } catch (e: Exception) {
-            log("[ERRO] Falha na leitura do Repositório: ${e.message}")
-            log("Verifique se seus Data Classes têm construtores vazios (valores padrão)!")
-        }
+    // 🌟 NOVO: Função para testar o carregamento de Vagas
+    private fun testVagasLoading() {
+        log("-> Iniciando teste de carregamento de Vagas (Firestore)...")
 
-        log("Testes de conteúdo estático concluídos. Clique para iniciar o app.")
+        // Assumindo que você também criou getVagasEmpregoOnce no repositório
+        repository.getVagasEmpregoOnce(
+            onSuccess = { vagas ->
+                val count = vagas.size
+                log("-> Vagas carregadas: ${count} itens. [SUCESSO]")
+                log("Testes de conteúdo estático concluídos. Clique para iniciar o app.")
+            },
+            onFailure = { e ->
+                log("[ERRO] Falha na leitura de Vagas: ${e.message}")
+                log("Verifique se há dados na coleção 'vagas' no Firestore.")
+                log("Testes de conteúdo estático concluídos. Clique para iniciar o app.")
+            }
+        )
     }
 }

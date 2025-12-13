@@ -1,5 +1,11 @@
+// ui/viewmodel/QuizViewModel.kt
+
 package com.example.unisic_app.ui.viewmodel
 
+import android.os.CountDownTimer
+import android.os.Handler
+import android.os.Looper // Adicionado para corrigir a depreciação
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -8,86 +14,126 @@ import com.example.unisic_app.data.repository.FirebaseRepository
 
 class QuizViewModel : ViewModel() {
 
-    // Lista de perguntas carregadas do Repositório
-    private val perguntas = FirebaseRepository().getPerguntas()
+    private val repository = FirebaseRepository()
 
-    val totalPerguntas: Int
-        get() = perguntas.size// Retorna o tamanho da lista privada
+    // --- LiveData de Estado do Quiz ---
+    private val _perguntas = MutableLiveData<List<Pergunta>>()
+    private val _perguntaAtual = MutableLiveData<Pergunta?>()
+    val perguntaAtual: LiveData<Pergunta?> = _perguntaAtual
 
-    // Estado do Quiz
-    private var indicePerguntaAtual = 0
-    private var pontuacaoAtual = 0
-
-    // LiveData que o Fragment irá OBSERVAR para atualizar a UI
-
-    // Contém a Pergunta que deve ser exibida na tela
-    private val _perguntaAtual = MutableLiveData<Pergunta>()
-    val perguntaAtual: LiveData<Pergunta> = _perguntaAtual
-
-    // Contém a pontuação para ser exibida
-    private val _pontuacao = MutableLiveData<Int>()
+    private val _pontuacao = MutableLiveData(0)
     val pontuacao: LiveData<Int> = _pontuacao
 
-    // Indica se o Quiz terminou (true/false)
-    private val _quizConcluido = MutableLiveData<Boolean>()
+    private val _quizConcluido = MutableLiveData(false)
     val quizConcluido: LiveData<Boolean> = _quizConcluido
 
+    // --- Timer e Lógica de Dificuldade ---
+    private val INITIAL_TIME_PER_QUESTION_SECONDS = 15
+    private val TIME_PENALTY_FOR_CORRECT_ANSWER_SECONDS = 1
+    private val MIN_TIME_SECONDS = 5
+
+    private var currentCorrectAnswersCount = 0
+    private var currentTimer: CountDownTimer? = null
+
+    private val _tempoRestante = MutableLiveData<Int>()
+    val tempoRestante: LiveData<Int> = _tempoRestante
+
+    // Variáveis de Controle
+    private var indicePerguntaAtual = 0
+    val totalPerguntas: Int
+        get() = _perguntas.value?.size ?: 0
 
     init {
-        // Inicializa a primeira pergunta
-        if (perguntas.isNotEmpty()) {
-            _perguntaAtual.value = perguntas[indicePerguntaAtual]
-            _pontuacao.value = 0
-            _quizConcluido.value = false
+        carregarPerguntas()
+    }
+
+    private fun carregarPerguntas() {
+        currentTimer?.cancel()
+        _perguntaAtual.value = null
+
+        repository.getQuizQuestionsOnce(
+            onSuccess = { perguntasCarregadas ->
+                _perguntas.value = perguntasCarregadas.shuffled()
+                indicePerguntaAtual = 0
+                _pontuacao.value = 0
+                _quizConcluido.value = false
+                currentCorrectAnswersCount = 0
+
+                if (perguntasCarregadas.isNotEmpty()) {
+                    avancarParaProximaPergunta()
+                } else {
+                    Log.w("QuizVM", "Nenhuma pergunta carregada do Firestore.")
+                    finalizarQuiz()
+                }
+            },
+            onFailure = { e ->
+                Log.e("QuizVM", "Falha ao carregar perguntas: ${e.message}")
+            }
+        )
+    }
+
+    private fun avancarParaProximaPergunta() {
+        if (indicePerguntaAtual < totalPerguntas) {
+            _perguntaAtual.value = _perguntas.value?.get(indicePerguntaAtual)
+            indicePerguntaAtual++
+            startQuestionTimer()
         } else {
-            // Caso não haja perguntas, conclui o quiz imediatamente
-            _quizConcluido.value = true
+            finalizarQuiz()
         }
     }
 
-    /**
-     * Verifica se a resposta selecionada está correta e avança para a próxima pergunta.
-     * Retorna true se a resposta estiver correta.
-     */
-    fun verificarResposta(respostaSelecionada: String): Boolean {
-        val pergunta = _perguntaAtual.value ?: return false
+    private fun startQuestionTimer() {
+        currentTimer?.cancel()
 
-        val correta = respostaSelecionada == pergunta.respostaCorreta
+        val penalty = currentCorrectAnswersCount * TIME_PENALTY_FOR_CORRECT_ANSWER_SECONDS
 
-        if (correta) {
-            pontuacaoAtual += 10 // Adiciona pontos pela resposta correta
-            _pontuacao.value = pontuacaoAtual
-        }
+        val durationSeconds = (INITIAL_TIME_PER_QUESTION_SECONDS - penalty)
+            .coerceAtLeast(MIN_TIME_SECONDS)
 
-        // Prepara a próxima pergunta
-        avancarPergunta()
+        _tempoRestante.value = durationSeconds
 
-        return correta
+        currentTimer = object : CountDownTimer(durationSeconds * 1000L, 1000L) {
+            override fun onTick(millisUntilFinished: Long) {
+                val secondsRemaining = (millisUntilFinished / 1000).toInt()
+                _tempoRestante.value = secondsRemaining
+            }
+
+            override fun onFinish() {
+                Log.d("QuizVM", "Tempo esgotado.")
+                verificarResposta("TEMPO_ESGOTADO", isTimeUp = true)
+            }
+        }.start()
     }
 
-    /**
-     * Avança para a próxima pergunta na lista ou conclui o quiz.
-     */
-    private fun avancarPergunta() {
-        indicePerguntaAtual++
-        if (indicePerguntaAtual < perguntas.size) {
-            _perguntaAtual.value = perguntas[indicePerguntaAtual]
-        } else {
-            // Não há mais perguntas: Quiz Concluído
-            _quizConcluido.value = true
+    fun verificarResposta(respostaUsuario: String, isTimeUp: Boolean = false) {
+        currentTimer?.cancel()
+        val pergunta = _perguntaAtual.value ?: return
+
+        val indiceCorreto = pergunta.correctAnswerIndex
+        val respostaCorretaTexto = pergunta.options.getOrNull(indiceCorreto)
+
+        if (!isTimeUp && respostaUsuario == respostaCorretaTexto) {
+            _pontuacao.value = (_pontuacao.value ?: 0) + 1
+            currentCorrectAnswersCount++
         }
+
+        // CORREÇÃO DE DEPRECIAÇÃO APLICADA AQUI
+        Handler(Looper.getMainLooper()).postDelayed({
+            avancarParaProximaPergunta()
+        }, 800)
     }
 
-    /**
-     * Reinicia o quiz para a primeira pergunta.
-     */
+    private fun finalizarQuiz() {
+        currentTimer?.cancel()
+        _quizConcluido.value = true
+    }
+
     fun reiniciarQuiz() {
-        indicePerguntaAtual = 0
-        pontuacaoAtual = 0
-        _pontuacao.value = 0
-        _quizConcluido.value = false
-        if (perguntas.isNotEmpty()) {
-            _perguntaAtual.value = perguntas[indicePerguntaAtual]
-        }
+        carregarPerguntas()
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        currentTimer?.cancel()
     }
 }

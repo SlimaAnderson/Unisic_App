@@ -7,24 +7,28 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import com.example.unisic_app.R
-import com.example.unisic_app.data.model.Pergunta
 import com.example.unisic_app.ui.viewmodel.QuizViewModel
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 
 class QuizFragment : Fragment(R.layout.fragment_quiz) {
 
-    // Inicializa o ViewModel (usa a injeção padrão do Fragment KTX)
     private val viewModel: QuizViewModel by viewModels()
 
     // Views do Layout
     private lateinit var textPontuacao: TextView
-    private lateinit var textPergunta: TextView
+    private lateinit var  textPergunta: TextView
     private lateinit var layoutOpcoes: LinearLayout
     private lateinit var layoutResultado: LinearLayout
     private lateinit var textResultadoFinal: TextView
     private lateinit var buttonReiniciar: Button
 
-    // Lista de botões para facilitar o mapeamento
+    // NOVOS ELEMENTOS: FAB e Timer
+    private lateinit var fabAddQuestion: FloatingActionButton
+    private lateinit var textTimer: TextView
+
+    // Lista de botões de opção
     private val botoesOpcao = mutableListOf<Button>()
 
 
@@ -39,82 +43,95 @@ class QuizFragment : Fragment(R.layout.fragment_quiz) {
         textResultadoFinal = view.findViewById(R.id.text_resultado_final)
         buttonReiniciar = view.findViewById(R.id.button_reiniciar_quiz)
 
+        // Mapeamento dos NOVOS elementos
+        fabAddQuestion = view.findViewById(R.id.fab_add_question)
+        textTimer = view.findViewById(R.id.text_quiz_timer)
+
         // Mapeia os botões de opção dinamicamente
         botoesOpcao.add(view.findViewById(R.id.button_opcao_a))
         botoesOpcao.add(view.findViewById(R.id.button_opcao_b))
         botoesOpcao.add(view.findViewById(R.id.button_opcao_c))
+        // 🌟 CORREÇÃO 1: Adicionando mapeamento para o quarto botão
+        botoesOpcao.add(view.findViewById(R.id.button_opcao_d))
 
         // 2. Configura os Observadores (Observers)
         configurarObservadores()
 
-        // 3. Configura o Listener do Botão Reiniciar
+        // 3. Configura os Listeners
         buttonReiniciar.setOnClickListener {
             viewModel.reiniciarQuiz()
         }
 
-        // 4. Configura os Listeners dos Botões de Opção
         configurarListenersOpcoes()
+
+        // Listener do FAB
+        fabAddQuestion.setOnClickListener {
+            findNavController().navigate(R.id.action_quizFragment_to_submitQuestionFragment)
+        }
     }
 
     private fun configurarListenersOpcoes() {
         botoesOpcao.forEach { button ->
             button.setOnClickListener {
                 val resposta = (it as Button).text.toString()
-                // Chama a lógica de verificação no ViewModel
                 viewModel.verificarResposta(resposta)
             }
         }
     }
 
     private fun configurarObservadores() {
-        // Observa o estado da pontuação
         viewModel.pontuacao.observe(viewLifecycleOwner) { pontuacao ->
             textPontuacao.text = getString(R.string.quiz_score, pontuacao)
-            // 💡 Nota: Você precisará adicionar o recurso string 'quiz_score' em res/values/strings.xml
         }
 
-        // Observa a pergunta atual e atualiza a UI
+        viewModel.tempoRestante.observe(viewLifecycleOwner) { tempo ->
+            textTimer.text = getString(R.string.quiz_timer, tempo)
+        }
+
         viewModel.perguntaAtual.observe(viewLifecycleOwner) { pergunta ->
             if (pergunta != null) {
-                // Atualiza o texto da pergunta
-                textPergunta.text = pergunta.texto
+                textPergunta.text = getString(
+                    R.string.quiz_question_and_creator,
+                    pergunta.questionText,
+                    pergunta.creatorNickname
+                )
 
-                // Atualiza os textos dos botões
-                pergunta.opcoes.forEachIndexed { index, opcao ->
+                // Exibe e preenche apenas as opções que existem na lista
+                pergunta.options.forEachIndexed { index, opcao ->
                     if (index < botoesOpcao.size) {
                         botoesOpcao[index].text = opcao
                         botoesOpcao[index].visibility = View.VISIBLE
                     }
                 }
 
-                // Esconde a tela de resultado
+                // 🌟 CORREÇÃO 2: Esconde botões extras se a pergunta tiver menos opções
+                for (i in pergunta.options.size until botoesOpcao.size) {
+                    botoesOpcao[i].visibility = View.GONE
+                }
+
                 layoutOpcoes.visibility = View.VISIBLE
                 layoutResultado.visibility = View.GONE
             }
         }
 
-        // Observa o status de conclusão do Quiz
         viewModel.quizConcluido.observe(viewLifecycleOwner) { concluido ->
             if (concluido) {
-                // Se concluído, mostra a tela de resultado
                 mostrarResultadoFinal()
             }
         }
     }
 
     private fun mostrarResultadoFinal() {
-        // Oculta as opções e mostra o resultado
         layoutOpcoes.visibility = View.GONE
         layoutResultado.visibility = View.VISIBLE
 
         val pontuacaoFinal = viewModel.pontuacao.value ?: 0
-        // O total de perguntas agora é acessível após a correção do ViewModel (Getter)
         val totalPerguntas = viewModel.totalPerguntas
 
         textResultadoFinal.text = getString(
             R.string.quiz_final_score,
-            pontuacaoFinal, // Parâmetro 1: Pontuação
-            totalPerguntas  // 🌟 Parâmetro 2: Total de Perguntas
+            pontuacaoFinal,
+            totalPerguntas
         )
     }
 }

@@ -30,11 +30,6 @@
         android:label="Home"
         tools:layout="@layout/fragment_home" />
 
-    <fragment
-        android:id="@+id/quizFragment"
-        android:name="com.example.unisic_app.ui.fragments.QuizFragment"
-        android:label="Quiz"
-        tools:layout="@layout/fragment_quiz" />
 
     <fragment
         android:id="@+id/cursosFragment"
@@ -93,5 +88,22 @@
         android:name="com.example.unisic_app.ui.fragments.NovaPostagemFragment"
         android:label="Nova Postagem"
         tools:layout="@layout/fragment_nova_postagem" />
+
+    <fragment
+        android:id="@+id/quizFragment"
+        android:name="com.example.unisic_app.ui.fragments.QuizFragment"
+        android:label="Quiz de Segurança"
+        tools:layout="@layout/fragment_quiz">
+
+        <action
+            android:id="@+id/action_quizFragment_to_submitQuestionFragment"
+            app:destination="@id/submitQuestionFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/submitQuestionFragment"
+        android:name="com.example.unisic_app.ui.fragments.SubmitQuestionFragment"
+        android:label="Criar Pergunta"
+        tools:layout="@layout/fragment_submit_question" />
 
 </navigation>
