@@ -31,8 +31,9 @@
             android:id="@+id/text_vaga_empresa"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
             android:textSize="14sp"
-            android:layout_marginTop="4dp"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/text_vaga_titulo"
             tools:text="Empresa: TechSolutions" />
@@ -41,20 +42,23 @@
             android:id="@+id/text_vaga_local"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
             android:textSize="14sp"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@id/text_vaga_empresa"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/text_vaga_data"
             tools:text="Local: São Paulo/SP" />
 
         <TextView
             android:id="@+id/text_vaga_data"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="12sp"
-            android:textColor="@android:color/darker_gray"
             android:layout_marginTop="8dp"
+            android:textColor="@android:color/darker_gray"
+            android:textSize="12sp"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/text_vaga_empresa"
+            app:layout_constraintTop_toBottomOf="@+id/text_vaga_empresa"
             tools:text="Publicado em: 13/12/2025" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
