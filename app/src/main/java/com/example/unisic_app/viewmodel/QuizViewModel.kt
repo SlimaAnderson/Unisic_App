@@ -4,7 +4,7 @@ package com.example.unisic_app.ui.viewmodel
 
 import android.os.CountDownTimer
 import android.os.Handler
-import android.os.Looper // Adicionado para corrigir a depreciação
+import android.os.Looper
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -100,7 +100,8 @@ class QuizViewModel : ViewModel() {
 
             override fun onFinish() {
                 Log.d("QuizVM", "Tempo esgotado.")
-                verificarResposta("TEMPO_ESGOTADO", isTimeUp = true)
+                // 💡 Nota: Aqui estamos passando uma String vazia, pois não houve resposta real
+                verificarResposta("", isTimeUp = true)
             }
         }.start()
     }
@@ -109,15 +110,30 @@ class QuizViewModel : ViewModel() {
         currentTimer?.cancel()
         val pergunta = _perguntaAtual.value ?: return
 
-        val indiceCorreto = pergunta.correctAnswerIndex
-        val respostaCorretaTexto = pergunta.options.getOrNull(indiceCorreto)
+        // 🌟 CORREÇÃO 1: Fazer a conversão segura de String? para Int.
+        // O campo agora é String? devido ao erro de desserialização anterior.
+        val indiceCorreto = pergunta.correctAnswerIndex?.toIntOrNull()
 
+        // Se o índice correto não puder ser convertido (indiceCorreto == null),
+        // assumimos que a pergunta é inválida e o usuário errou, ou simplesmente retornamos.
+        if (indiceCorreto == null) {
+            Log.e("QuizVM", "correctAnswerIndex inválido para conversão Int: ${pergunta.correctAnswerIndex}")
+        }
+
+        // 🌟 CORREÇÃO 2: Obter o texto da resposta correta usando o índice convertido
+        val respostaCorretaTexto = if (indiceCorreto != null) {
+            pergunta.options.getOrNull(indiceCorreto)
+        } else {
+            null
+        }
+
+        // 🌟 CORREÇÃO 3: Lógica de verificação
+        // Aumenta a pontuação se não for tempo esgotado E a resposta do usuário corresponder ao texto da opção correta.
         if (!isTimeUp && respostaUsuario == respostaCorretaTexto) {
             _pontuacao.value = (_pontuacao.value ?: 0) + 1
             currentCorrectAnswersCount++
         }
 
-        // CORREÇÃO DE DEPRECIAÇÃO APLICADA AQUI
         Handler(Looper.getMainLooper()).postDelayed({
             avancarParaProximaPergunta()
         }, 800)

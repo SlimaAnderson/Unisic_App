@@ -48,19 +48,12 @@ class NovaPostagemFragment : Fragment(R.layout.fragment_nova_postagem) {
             return
         }
 
-        // 1. Coletar dados do autor e data
-        val currentUser = FirebaseAuth.getInstance().currentUser
-        val author = currentUser?.email ?: "Usuário Desconhecido"
-        val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
-        val date = dateFormat.format(Date())
+
 
         // 2. Criar o objeto Postagem (Garantindo que comentários é uma lista vazia)
         val newPost = Postagem(
-            id = "", // O ID será gerado pelo Firestore
-            autor = author,
             titulo = title, // 🚨 Você precisará adicionar 'titulo' ao seu data class Postagem
             texto = content,
-            data = date,
             comentarios = emptyList() // ESSENCIAL: Array vazio, não Map!
         )
 

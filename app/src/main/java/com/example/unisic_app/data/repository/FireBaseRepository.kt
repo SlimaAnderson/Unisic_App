@@ -1,5 +1,6 @@
 package com.example.unisic_app.data.repository
 
+import android.util.Log
 import com.example.unisic_app.data.model.ModuloCurso
 import com.example.unisic_app.data.model.Noticia
 import com.example.unisic_app.data.model.Pergunta
@@ -32,23 +33,26 @@ class FirebaseRepository {
 
     /**
      * Configura um listener em tempo real para a coleção "comunidade",
-     * INJETANDO O ID DO DOCUMENTO na classe Postagem.
+     * priorizando postagens fixadas.
      */
     fun getPostsRealtime(onUpdate: (List<Postagem>) -> Unit): ListenerRegistration {
         return db.collection("comunidade")
-            .orderBy("data", Query.Direction.DESCENDING)
+            // 🌟 CORREÇÃO DE NOME: Usar "pinned" conforme o DB
+            .orderBy("pinned", Query.Direction.DESCENDING)
+            .orderBy("timestamp", Query.Direction.DESCENDING)
             .addSnapshotListener { snapshot, e ->
                 if (e != null) {
-                    println("Erro ao ouvir posts: $e")
+                    // 🌟 CORREÇÃO DE DEBUG: Usar Log.e para diagnosticar o erro de índice
+                    Log.e("FirebaseRepo", "Erro ao ouvir posts (Verifique o Índice Composto!): ${e.message}", e)
+                    // Se houver falha, retorna uma lista vazia para evitar um crash
+                    onUpdate(emptyList())
                     return@addSnapshotListener
                 }
 
                 if (snapshot != null) {
-                    // CORREÇÃO: Usar .documents.map para injetar o ID do documento
                     val posts = snapshot.documents.mapNotNull { document ->
                         val postagemBase = document.toObject(Postagem::class.java)
 
-                        // Garante que o objeto existe e injeta o ID e o autorUid (que deve vir do DB)
                         if (postagemBase != null && document.exists()) {
                             postagemBase.copy(id = document.id)
                         } else {
@@ -62,10 +66,10 @@ class FirebaseRepository {
 
     /**
      * Adiciona uma nova postagem na coleção "comunidade" do Firestore.
-     * 🌟 CORRIGIDO: Agora salva 'autor' (nick) e 'autorUid' (UID).
+     * 🌟 CORRIGIDO: Agora usa o timestamp Long e salva autor e autorUid.
      */
     fun addPostagem(
-        postagem: Postagem, // Postagem deve ter autor e autorUid vazios no momento da chamada
+        postagem: Postagem,
         onSuccess: () -> Unit,
         onFailure: (Exception) -> Unit
     ) {
@@ -78,11 +82,13 @@ class FirebaseRepository {
         // 1. Obtém o Apelido (Nick)
         getUserNickByUid(currentUid,
             onSuccess = { nick ->
-                // 2. Cria a postagem com o nick, UID e data
+                // 2. Cria a postagem com o nick, UID e data/timestamp
                 val postagemComDados = postagem.copy(
-                    autor = nick,           // Nick do usuário logado
-                    autorUid = currentUid,  // 🌟 NOVO: UID do autor do post
-                    data = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(Date())
+                    autor = nick,
+                    autorUid = currentUid,
+                    // 🌟 CORREÇÃO 3: Removendo o campo "data" String e usando o timestamp Long
+                    timestamp = System.currentTimeMillis()
+                    // Se o seu modelo Postagem ainda tiver 'data: String', você deve removê-lo do modelo
                 )
 
                 // 3. Salva no Firestore

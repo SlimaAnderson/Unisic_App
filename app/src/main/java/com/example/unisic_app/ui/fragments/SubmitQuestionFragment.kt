@@ -29,7 +29,6 @@ class SubmitQuestionFragment : Fragment(R.layout.fragment_submit_question) {
     private lateinit var inputOptionB: EditText
     private lateinit var inputOptionC: EditText
     private lateinit var inputOptionD: EditText
-    // 🌟 CORREÇÃO 1: Removida a referência incorreta a RadioGroup
 
     // Views dos Botões de Rádio e Controles
     private lateinit var radioA: RadioButton
@@ -38,7 +37,7 @@ class SubmitQuestionFragment : Fragment(R.layout.fragment_submit_question) {
     private lateinit var radioD: RadioButton
     private lateinit var buttonSubmit: Button
 
-    // 🌟 CORREÇÃO 2: Variável de estado global reintroduzida para rastrear o clique manual
+    // Variável de estado global reintroduzida para rastrear o clique manual
     private var checkedRadioId: Int = -1
 
     // Lista de layouts clicáveis e radio buttons para gerenciamento
@@ -56,8 +55,6 @@ class SubmitQuestionFragment : Fragment(R.layout.fragment_submit_question) {
         inputOptionB = view.findViewById(R.id.input_option_b)
         inputOptionC = view.findViewById(R.id.input_option_c)
         inputOptionD = view.findViewById(R.id.input_option_d)
-
-        // 🌟 CORREÇÃO 3: Removido o mapeamento incorreto da RadioGroup
 
         radioA = view.findViewById(R.id.radio_a)
         radioB = view.findViewById(R.id.radio_b)
@@ -111,6 +108,7 @@ class SubmitQuestionFragment : Fragment(R.layout.fragment_submit_question) {
     private fun loadCurrentUserNickname() {
         val user = auth.currentUser
         if (user != null) {
+            // Se o nickname não estiver no display name, tenta usar o email
             currentNickname = user.displayName ?: user.email?.split("@")?.get(0) ?: "Anônimo"
             textCreatorNick.text = "Criador: @$currentNickname"
         } else {
@@ -130,7 +128,6 @@ class SubmitQuestionFragment : Fragment(R.layout.fragment_submit_question) {
             inputOptionD.text.toString().trim()
         )
 
-        // 🌟 CORREÇÃO 4: Usa a variável de estado global atualizada pelos listeners
         val selectedRadioId = checkedRadioId
 
         // 1. Validação de Campos Vazios
@@ -139,8 +136,8 @@ class SubmitQuestionFragment : Fragment(R.layout.fragment_submit_question) {
             return
         }
 
-        // 2. Determinar o índice correto e Validação da Seleção
-        val correctAnswerIndex = when (selectedRadioId) {
+        // 2. Determinar o índice correto (Int)
+        val correctAnswerIndexInt = when (selectedRadioId) {
             R.id.radio_a -> 0
             R.id.radio_b -> 1
             R.id.radio_c -> 2
@@ -151,6 +148,9 @@ class SubmitQuestionFragment : Fragment(R.layout.fragment_submit_question) {
                 return
             }
         }
+
+        // 🌟 CORREÇÃO DE TIPO: Converter o Int para String para o modelo Pergunta.kt
+        val correctAnswerIndexString = correctAnswerIndexInt.toString()
 
         // Validação de Nickname
         val creator = currentNickname
@@ -163,7 +163,8 @@ class SubmitQuestionFragment : Fragment(R.layout.fragment_submit_question) {
         val newQuestion = Pergunta(
             questionText = questionText,
             options = options,
-            correctAnswerIndex = correctAnswerIndex,
+            // 🛑 CORREÇÃO APLICADA: Passar a String em vez do Int
+            correctAnswerIndex = correctAnswerIndexString,
             category = "Comunidade",
             creatorNickname = creator
         )

@@ -124,7 +124,7 @@ class PostagemDetalheFragment : Fragment(R.layout.fragment_postagem_detalhe), On
                     currentPost = post
 
                     tvPostTitulo.text = post.titulo
-                    tvPostAutorData.text = "Por: ${post.autor} | ${post.data}"
+                    tvPostAutorData.text = "Por: ${post.autor} | ${post.timestamp}"
 
                     tvPostContent.text = post.texto
                     activity?.title = post.titulo
