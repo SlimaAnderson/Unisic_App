@@ -11,56 +11,58 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.navOptions
 import com.example.unisic_app.R
+import com.example.unisic_app.data.model.ModuloCurso
 import com.example.unisic_app.data.model.Progresso
 import com.example.unisic_app.data.repository.FirebaseRepository
 import com.google.firebase.auth.FirebaseAuth
+// IMPORTANTE: Se estiver usando SafeArgs, certifique-se de que a importação do Args está correta e a classe foi gerada.
+// import com.example.unisic_app.ui.fragments.CursoDetalheFragmentArgs
 
 class CursoDetalheFragment : Fragment(R.layout.fragment_curso_detalhe) {
 
     private val repository = FirebaseRepository()
+    private val auth = FirebaseAuth.getInstance()
 
     private lateinit var textTitulo: TextView
-    private lateinit var textConteudo: TextView // 🌟 CORREÇÃO 1: Declaração correta e única
+    private lateinit var textSubtitulo: TextView
+    private lateinit var textConteudo: TextView
     private lateinit var buttonMarcarConcluido: Button
 
-    private var moduleIdString: String = "0"
+    // 💡 Agora armazena o ID como String, que é o que o repositório Firebase espera para o document().
+    private var moduleIdString: String = ""
     private var isModuleOfficiallyCompleted = false
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val moduloIdInt = arguments?.getInt("moduloId") ?: 0
-        moduleIdString = moduloIdInt.toString()
+        // 1. OBTENDO O ARGUMENTO CORRETAMENTE
 
-        // Lê o status de conclusão instantaneamente dos argumentos (Passo anterior)
+        // 🚨 CORREÇÃO PRINCIPAL: Lê o argumento como String, conforme enviado pelo Adapter.
+        val moduleIdFromArgs = arguments?.getString("moduloId")
         val isPreviouslyCompleted = arguments?.getBoolean("isAlreadyCompleted") ?: false
-        isModuleOfficiallyCompleted = isPreviouslyCompleted
 
+        // CORREÇÃO: Mapeamento de Views
         textTitulo = view.findViewById(R.id.text_curso_detalhe_titulo)
-        textConteudo = view.findViewById(R.id.text_curso_detalhe_conteudo) // 🌟 CORREÇÃO 2: Mapeamento correto
+        textSubtitulo = view.findViewById(R.id.text_curso_detalhe_subtitulo)
+        textConteudo = view.findViewById(R.id.text_curso_detalhe_conteudo)
         buttonMarcarConcluido = view.findViewById(R.id.button_marcar_concluido)
 
-        if (moduloIdInt > 0) {
-            val modulo = repository.getModuloCurso(moduloIdInt)
 
-            if (modulo != null) {
-                textTitulo.text = modulo.titulo
-                textConteudo.text = modulo.conteudo // 🌟 CORREÇÃO 3: Uso correto
-
-                // Atualiza a UI imediatamente com o status do argumento
-                if (isModuleOfficiallyCompleted) {
-                    buttonMarcarConcluido.text = "MÓDULO CONCLUÍDO"
-                    buttonMarcarConcluido.isEnabled = false
-                } else {
-                    buttonMarcarConcluido.setOnClickListener {
-                        markModuleAsCompleted(moduleIdString)
-                    }
-                }
-
-            } else {
-                textTitulo.text = "Módulo não encontrado"
-            }
+        // 2. VALIDAÇÃO
+        // Verifica se a String do ID é nula ou vazia.
+        if (moduleIdFromArgs.isNullOrEmpty()) {
+            // Mostra a mensagem e sai da tela (popBackStack)
+            Toast.makeText(requireContext(), "Erro: ID do módulo não fornecido (String inválida).", Toast.LENGTH_SHORT).show()
+            findNavController().popBackStack()
+            return
         }
+
+        // Armazena a String recebida.
+        moduleIdString = moduleIdFromArgs
+        isModuleOfficiallyCompleted = isPreviouslyCompleted
+
+        // 3. Carregar o conteúdo do Módulo do Firebase usando a String do ID
+        loadModuleContent(moduleIdString)
 
         // Lógica para interceptar o botão "Voltar" (Gesto ou tecla física)
         val callback = object : OnBackPressedCallback(true) {
@@ -71,15 +73,50 @@ class CursoDetalheFragment : Fragment(R.layout.fragment_curso_detalhe) {
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, callback)
     }
 
+    private fun loadModuleContent(moduleId: String) {
+        repository.getModuloCursoById(moduleId,
+            onSuccess = { modulo ->
+                if (modulo != null) {
+                    // Preenche os TextViews
+                    textTitulo.text = modulo.titulo
+                    textSubtitulo.text = modulo.subtitulo
+                    textConteudo.text = modulo.conteudo
+
+                    setupButton(isModuleOfficiallyCompleted)
+                } else {
+                    textTitulo.text = "Módulo não encontrado"
+                    textConteudo.text = "O conteúdo deste módulo pode ter sido removido."
+                }
+            },
+            onFailure = { e ->
+                Log.e("CursoDetalhe", "Falha ao carregar módulo $moduleId: ${e.message}")
+                Toast.makeText(requireContext(), "Erro ao carregar conteúdo.", Toast.LENGTH_SHORT).show()
+                textTitulo.text = "Erro de Carregamento"
+            }
+        )
+    }
+
+    private fun setupButton(isCompleted: Boolean) {
+        if (isCompleted) {
+            buttonMarcarConcluido.text = "MÓDULO CONCLUÍDO"
+            buttonMarcarConcluido.isEnabled = false
+        } else {
+            buttonMarcarConcluido.text = "MARCAR COMO CONCLUÍDO"
+            buttonMarcarConcluido.isEnabled = true
+            buttonMarcarConcluido.setOnClickListener {
+                markModuleAsCompleted(moduleIdString)
+            }
+        }
+    }
+
     override fun onPause() {
         super.onPause()
 
         // IMPEDE A SOBRESCRITA: Se a flag for TRUE (carregada do argumento), o onPause() é ignorado.
-        if (moduleIdString != "0" && !isModuleOfficiallyCompleted) {
+        if (moduleIdString.isNotEmpty() && !isModuleOfficiallyCompleted) {
             saveCurrentProgress(moduleIdString, "Em Progresso (Detalhe)")
         }
     }
-
 
     private fun navigateToCursosFragment() {
         findNavController().navigate(
@@ -95,8 +132,9 @@ class CursoDetalheFragment : Fragment(R.layout.fragment_curso_detalhe) {
     }
 
     private fun saveCurrentProgress(moduleId: String, currentSectionName: String) {
-        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        val userId = auth.currentUser?.uid ?: return
 
+        // O Progresso espera um moduleId (String)
         val progress = Progresso(
             moduleId = moduleId,
             lastSection = currentSectionName,
@@ -114,7 +152,7 @@ class CursoDetalheFragment : Fragment(R.layout.fragment_curso_detalhe) {
     }
 
     private fun markModuleAsCompleted(moduleId: String) {
-        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        val userId = auth.currentUser?.uid ?: return
 
         val progress = Progresso(
             moduleId = moduleId,

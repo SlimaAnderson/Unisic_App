@@ -18,6 +18,7 @@ import com.google.firebase.ktx.Firebase
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -37,14 +38,12 @@ class FirebaseRepository {
      */
     fun getPostsRealtime(onUpdate: (List<Postagem>) -> Unit): ListenerRegistration {
         return db.collection("comunidade")
-            // 🌟 CORREÇÃO DE NOME: Usar "pinned" conforme o DB
             .orderBy("pinned", Query.Direction.DESCENDING)
             .orderBy("timestamp", Query.Direction.DESCENDING)
             .addSnapshotListener { snapshot, e ->
                 if (e != null) {
-                    // 🌟 CORREÇÃO DE DEBUG: Usar Log.e para diagnosticar o erro de índice
+                    // O link para criar o índice composto no console aparece aqui.
                     Log.e("FirebaseRepo", "Erro ao ouvir posts (Verifique o Índice Composto!): ${e.message}", e)
-                    // Se houver falha, retorna uma lista vazia para evitar um crash
                     onUpdate(emptyList())
                     return@addSnapshotListener
                 }
@@ -54,6 +53,7 @@ class FirebaseRepository {
                         val postagemBase = document.toObject(Postagem::class.java)
 
                         if (postagemBase != null && document.exists()) {
+                            // Injeta o ID do documento (String) no modelo.
                             postagemBase.copy(id = document.id)
                         } else {
                             null
@@ -66,7 +66,6 @@ class FirebaseRepository {
 
     /**
      * Adiciona uma nova postagem na coleção "comunidade" do Firestore.
-     * 🌟 CORRIGIDO: Agora usa o timestamp Long e salva autor e autorUid.
      */
     fun addPostagem(
         postagem: Postagem,
@@ -86,9 +85,7 @@ class FirebaseRepository {
                 val postagemComDados = postagem.copy(
                     autor = nick,
                     autorUid = currentUid,
-                    // 🌟 CORREÇÃO 3: Removendo o campo "data" String e usando o timestamp Long
                     timestamp = System.currentTimeMillis()
-                    // Se o seu modelo Postagem ainda tiver 'data: String', você deve removê-lo do modelo
                 )
 
                 // 3. Salva no Firestore
@@ -125,7 +122,7 @@ class FirebaseRepository {
                     val postagem = snapshot.toObject(Postagem::class.java)
 
                     if (postagem != null) {
-                        // INJETA O ID
+                        // INJETA O ID do documento
                         onSuccess(postagem.copy(id = snapshot.id))
                     } else {
                         onSuccess(null)
@@ -325,7 +322,7 @@ class FirebaseRepository {
                 // Se o documento não existir, tenta criar com merge.
                 if (e.message?.contains("NOT_FOUND") == true) {
                     db.collection("usuarios").document(uid)
-                        .set(data, com.google.firebase.firestore.SetOptions.merge())
+                        .set(data, SetOptions.merge())
                         .addOnSuccessListener { onSuccess() }
                         .addOnFailureListener { e2 -> onFailure(e2) }
                 } else {
@@ -345,20 +342,16 @@ class FirebaseRepository {
      */
     fun getNoticiasRealtime(onUpdate: (List<Noticia>) -> Unit): ListenerRegistration {
         return db.collection("noticias")
-            // Ordena por data (assumindo que "data" é um Timestamp ou String consistente)
             .orderBy("data", Query.Direction.DESCENDING)
             .addSnapshotListener { snapshot, e ->
                 if (e != null) {
-                    println("Erro ao ouvir notícias: $e")
-                    // Se houver falha, pode retornar uma lista vazia ou logs de erro
+                    Log.e("FirebaseRepo", "Erro ao ouvir notícias: $e")
                     onUpdate(emptyList())
                     return@addSnapshotListener
                 }
 
                 if (snapshot != null) {
-                    // Mapeia os documentos para a data class Noticia
                     val noticias = snapshot.documents.mapNotNull { document ->
-                        // O ID do documento é injetado no modelo
                         document.toObject(Noticia::class.java)?.copy(id = document.id)
                     }
                     onUpdate(noticias)
@@ -373,10 +366,9 @@ class FirebaseRepository {
     fun getVagasEmpregoOnce(onSuccess: (List<VagaEmprego>) -> Unit, onFailure: (Exception) -> Unit) {
         db.collection("vagas")
             .orderBy("dataPublicacao", Query.Direction.DESCENDING)
-            .get() // Usa get() em vez de addSnapshotListener
+            .get()
             .addOnSuccessListener { snapshot ->
                 val vagas = snapshot.documents.mapNotNull { document ->
-                    // Assumindo que você tem a data class VagaEmprego
                     document.toObject(VagaEmprego::class.java)?.copy(id = document.id)
                 }
                 onSuccess(vagas)
@@ -392,17 +384,15 @@ class FirebaseRepository {
      */
     fun getVagasEmpregoRealtime(onUpdate: (List<VagaEmprego>) -> Unit): ListenerRegistration {
         return db.collection("vagas")
-            // Ordena pela data de publicação
             .orderBy("dataPublicacao", Query.Direction.DESCENDING)
             .addSnapshotListener { snapshot, e ->
                 if (e != null) {
-                    println("Erro ao ouvir vagas: $e")
+                    Log.e("FirebaseRepo", "Erro ao ouvir vagas: $e")
                     onUpdate(emptyList())
                     return@addSnapshotListener
                 }
 
                 if (snapshot != null) {
-                    // Mapeia os documentos para a data class VagaEmprego
                     val vagas = snapshot.documents.mapNotNull { document ->
                         document.toObject(VagaEmprego::class.java)?.copy(id = document.id)
                     }
@@ -414,7 +404,7 @@ class FirebaseRepository {
     fun getNoticiasOnce(onSuccess: (List<Noticia>) -> Unit, onFailure: (Exception) -> Unit) {
         db.collection("noticias")
             .orderBy("data", Query.Direction.DESCENDING)
-            .get() // Usa get() em vez de addSnapshotListener
+            .get()
             .addOnSuccessListener { snapshot ->
                 val noticias = snapshot.documents.mapNotNull { document ->
                     document.toObject(Noticia::class.java)?.copy(id = document.id)
@@ -427,24 +417,28 @@ class FirebaseRepository {
     }
 
 // =======================================================================
-// IV. FUNÇÕES DO QUIZ (FIREBASE FIRESTORE - Coleção 'perguntas')
+// IV. FUNÇÕES DO QUIZ E CURSOS (FIREBASE FIRESTORE)
 // =======================================================================
 
     /**
      * Busca todas as perguntas do Quiz uma única vez para iniciar uma sessão.
+     * CORREÇÃO: Usa o ID do documento (String) para injetar no modelo.
      */
     fun getQuizQuestionsOnce(
         onSuccess: (List<Pergunta>) -> Unit,
         onFailure: (Exception) -> Unit
     ) {
-        db.collection("perguntas") // Coleção confirmada
+        db.collection("perguntas")
             .get()
             .addOnSuccessListener { snapshot ->
                 val perguntas = snapshot.documents.mapNotNull { document ->
-                    // Mapeia os documentos para a data class Pergunta
-                    document.toObject(Pergunta::class.java)?.copy(id = document.id)
+                    val pergunta = document.toObject(Pergunta::class.java)
+
+                    // ✅ CORREÇÃO: Injeta o ID do documento. Isso resolve o Long to String,
+                    // a menos que o campo 'id' na data class Pergunta não seja String?.
+                    pergunta?.copy(id = document.id)
                 }
-                onSuccess(perguntas)
+                onSuccess(perguntas.filterNotNull())
             }
             .addOnFailureListener { e ->
                 onFailure(e)
@@ -470,25 +464,76 @@ class FirebaseRepository {
     }
 
     /**
-     * Retorna a lista estática de módulos de curso.
+     * 💡 Configura um listener em tempo real para carregar a lista de Módulos de Curso.
+     * CORREÇÃO: Injeta o ID do documento (String) no ModuloCurso.id.
      */
-    fun getModulosCurso(): List<ModuloCurso> {
-        // Dados de exemplo para a lista de Módulos
-        return listOf(
-            ModuloCurso(1, "Introdução", "Visão geral da segurança", "A segurança digital é um estado de espírito... Conteúdo completo aqui."),
-            ModuloCurso(2, "Iniciante", "Senhas e 2FA", "Aprenda a criar senhas fortes e a importância da Autenticação de Dois Fatores.")
-        )
+    fun getModulosRealtime(onUpdate: (List<ModuloCurso>) -> Unit): ListenerRegistration {
+        return db.collection("modulos_curso")
+            // Ordena os módulos pelo campo 'order'
+            .orderBy("order", Query.Direction.ASCENDING)
+            .addSnapshotListener { snapshot, e ->
+                if (e != null) {
+                    Log.e("FirebaseRepo", "Erro ao ouvir módulos: ${e.message}", e)
+                    onUpdate(emptyList())
+                    return@addSnapshotListener
+                }
+
+                val modulos = snapshot?.documents?.mapNotNull { document ->
+                    try {
+                        val moduloBase = document.toObject(ModuloCurso::class.java)
+
+                        // ✅ CORREÇÃO: Tentativa de ler Long e conversão para String.
+                        // Se "id" for Long no Firestore (e não String), isso resolve.
+                        // Caso contrário, usamos o ID do documento.
+                        val firestoreIdLong = document.getLong("id")
+                        val idParaModelo = firestoreIdLong?.toString() ?: document.id
+
+                        moduloBase?.copy(id = idParaModelo)
+
+                    } catch (e: Exception) {
+                        Log.e("FirebaseRepo", "Erro de desserialização em ModuloCurso: ${e.message}", e)
+                        null
+                    }
+                } ?: emptyList()
+
+                onUpdate(modulos.filterNotNull())
+            }
     }
 
     /**
-     * Busca um módulo de curso estático por ID.
+     * Busca um módulo de curso específico pelo ID do documento (para a tela de detalhe).
+     * CORREÇÃO: Força a leitura do campo 'id' (que é Long no Firestore) para String no modelo.
      */
-    fun getModuloCurso(id: Int): ModuloCurso? {
-        return getModulosCurso().find { it.id == id }
-    }
+    fun getModuloCursoById(moduleId: String, onSuccess: (ModuloCurso?) -> Unit, onFailure: (Exception) -> Unit) {
+        // ASSUME que o moduleId é o ID do DOCUMENTO (String) que foi passado pela navegação.
+        db.collection("modulos_curso").document(moduleId)
+            .get()
+            .addOnSuccessListener { document ->
+                if (document != null && document.exists()) {
+                    val modulo = try {
+                        val moduloBase = document.toObject(ModuloCurso::class.java)
 
+                        // ✅ CORREÇÃO: Força a leitura do campo 'id' (Long) para String.
+                        val firestoreIdLong = document.getLong("id")
+                        val idParaModelo = firestoreIdLong?.toString() ?: document.id
+
+                        moduloBase?.copy(id = idParaModelo)
+
+                    } catch (e: Exception) {
+                        Log.e("FirebaseRepo", "Erro de desserialização: ${e.message}", e)
+                        null
+                    }
+                    onSuccess(modulo)
+                } else {
+                    onSuccess(null) // Documento não encontrado
+                }
+            }
+            .addOnFailureListener { e ->
+                onFailure(e)
+            }
+    }
 // =======================================================================
-// V. FUNÇÕES DE PROGRESSO (CURSOS) 🌟 ADICIONADAS
+// V. FUNÇÕES DE PROGRESSO (CURSOS)
 // =======================================================================
 
     /**
@@ -506,9 +551,9 @@ class FirebaseRepository {
             return
         }
 
-        db.collection("users").document(userId)
+        // Caminho corrigido para consistência
+        db.collection("usuarios").document(userId)
             .collection("progresso").document(progress.moduleId)
-            // Usamos set(progress) para criar ou atualizar o documento
             .set(progress)
             .addOnSuccessListener {
                 onSuccess()
@@ -529,7 +574,7 @@ class FirebaseRepository {
             return
         }
 
-        db.collection("users").document(userId)
+        db.collection("usuarios").document(userId)
             .collection("progresso")
             .get()
             .addOnSuccessListener { querySnapshot ->
@@ -547,12 +592,10 @@ class FirebaseRepository {
         onSuccess: (Progresso?) -> Unit,
         onFailure: (Exception) -> Unit
     ) {
-        // 1. Obter a referência ao documento de progresso
-        // (A estrutura pode variar, mas assumindo uma coleção 'progressos' dentro do documento do usuário)
-        val db = FirebaseFirestore.getInstance()
+        // Uso de 'db' em vez de redefinir FirebaseFirestore.getInstance()
         db.collection("usuarios")
             .document(userId)
-            .collection("progressos")
+            .collection("progresso")
             .document(moduleId)
             .get()
             .addOnSuccessListener { documentSnapshot ->

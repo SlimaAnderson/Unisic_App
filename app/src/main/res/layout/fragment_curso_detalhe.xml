@@ -21,7 +21,20 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            tools:text="1. Introdução à Segurança" />
+            tools:text="1. Fundamentos Pessoais de Segurança" />
+
+        <TextView
+            android:id="@+id/text_curso_detalhe_subtitulo"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textSize="18sp"
+            android:textStyle="italic"
+            android:textColor="?android:attr/textColorSecondary"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/text_curso_detalhe_titulo"
+            tools:text="Phishing, 2FA e Gerenciamento de Senhas: O Essencial." />
 
         <TextView
             android:id="@+id/text_curso_detalhe_conteudo"
@@ -29,10 +42,11 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:textSize="16sp"
+            android:lineSpacingMultiplier="1.2"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/text_curso_detalhe_titulo"
-            tools:text="Conteúdo completo aqui." />
+            app:layout_constraintTop_toBottomOf="@id/text_curso_detalhe_subtitulo"
+            tools:text="Conteúdo completo e detalhado aqui, contendo todos os três parágrafos de explicação técnica." />
 
         <Button
             android:id="@+id/button_marcar_concluido"

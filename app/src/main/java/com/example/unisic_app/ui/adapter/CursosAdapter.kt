@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import androidx.recyclerview.widget.RecyclerView
@@ -14,8 +15,8 @@ import com.example.unisic_app.data.model.ModuloCurso
 import com.example.unisic_app.data.model.Progresso
 
 class CursosAdapter(
-    private val listaModulos: List<ModuloCurso>,
-    private var progressoUsuario: List<Progresso>, // Deve ser 'var' para ser atualizado
+    private var modulosList: List<ModuloCurso>,
+    private var progressoUsuario: List<Progresso>,
     private val navController: NavController
 ) : RecyclerView.Adapter<CursosAdapter.CursoViewHolder>() {
 
@@ -39,19 +40,23 @@ class CursosAdapter(
 
     override fun onBindViewHolder(holder: CursoViewHolder, position: Int) {
         val context = holder.itemView.context
-        val modulo = listaModulos[position]
+        val moduloCurso = modulosList[position]
 
-        val progresso = progressoUsuario.find { it.moduleId == modulo.id.toString() }
+        // 💡 LENDO ID COMO STRING (DO MODELO CORRIGIDO)
+        val moduleIdString = moduloCurso.id
 
-        // 🌟 CORREÇÃO: Captura o status de conclusão para ser passado como argumento
+        // 1. Busca o status de progresso
+        val progresso = progressoUsuario.find { it.moduleId == moduleIdString }
+
+        // 2. Define a variável de status
         val isCompletedStatus = progresso?.completed ?: false
 
-        holder.titulo.text = modulo.titulo
-        holder.descricao.text = modulo.descricao
+        holder.titulo.text = moduloCurso.titulo
+        holder.descricao.text = moduloCurso.descricao
 
         // Lógica de Status (Ícone e Cor do Título)
         if (progresso != null) {
-            if (progresso.completed) {
+            if (isCompletedStatus) {
                 // Status: CONCLUÍDO (Ícone VERDE)
                 holder.statusIcon.setImageResource(R.drawable.circle_status_concluido)
                 holder.titulo.setTextColor(ContextCompat.getColor(context, R.color.colorSuccess))
@@ -68,19 +73,30 @@ class CursosAdapter(
 
         // Lógica de clique para NAVEGAR
         holder.itemView.setOnClickListener {
+
+            // Verifica se o ID é válido antes de navegar
+            if (moduleIdString.isNullOrEmpty()) {
+                Toast.makeText(context, "Erro: ID do módulo inválido para navegação.", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
             val bundle = Bundle().apply {
-                putInt("moduloId", modulo.id)
-                putString("moduloTitulo", modulo.titulo)
-                // 🌟 CORREÇÃO FINAL AQUI: Passando o status de conclusão para o Detalhe
+                // ✅ CORREÇÃO CRÍTICA: ENVIANDO O ID COMO STRING (putString)
+                putString("moduloId", moduleIdString)
+
+                // Passa o status de conclusão.
                 putBoolean("isAlreadyCompleted", isCompletedStatus)
             }
-            navController.navigate(
-                R.id.action_cursosFragment_to_cursoDetalheFragment,
-                bundle
-            )
+
+            // Navega para a próxima tela
+            navController.navigate(R.id.cursoDetalheFragment, bundle)
         }
     }
 
-    override fun getItemCount(): Int = listaModulos.size
+    override fun getItemCount(): Int = modulosList.size
 
+    fun updateModulosList(newModulos: List<ModuloCurso>) {
+        this.modulosList = newModulos
+        notifyDataSetChanged()
+    }
 }
