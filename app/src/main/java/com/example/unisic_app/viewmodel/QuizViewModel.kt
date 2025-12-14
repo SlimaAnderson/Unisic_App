@@ -28,7 +28,7 @@ class QuizViewModel : ViewModel() {
     val quizConcluido: LiveData<Boolean> = _quizConcluido
 
     // --- Timer e Lógica de Dificuldade ---
-    private val INITIAL_TIME_PER_QUESTION_SECONDS = 15
+    private val INITIAL_TIME_PER_QUESTION_SECONDS = 45
     private val TIME_PENALTY_FOR_CORRECT_ANSWER_SECONDS = 1
     private val MIN_TIME_SECONDS = 5
 
