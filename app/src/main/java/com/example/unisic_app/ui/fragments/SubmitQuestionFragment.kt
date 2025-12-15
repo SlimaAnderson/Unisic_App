@@ -47,7 +47,7 @@ class SubmitQuestionFragment : Fragment(R.layout.fragment_submit_question) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 1. Mapeamento de Views
+        // Mapeamento de Views
         textCreatorNick = view.findViewById(R.id.text_creator_nick)
         inputQuestionText = view.findViewById(R.id.input_question_text)
 
@@ -63,7 +63,7 @@ class SubmitQuestionFragment : Fragment(R.layout.fragment_submit_question) {
 
         buttonSubmit = view.findViewById(R.id.button_submit_question)
 
-        // Mapeia os layouts das opções (Layouts clicáveis: layout_option_a, etc.)
+        // Mapeia os layouts das opções
         layoutOptions.add(view.findViewById(R.id.layout_option_a))
         layoutOptions.add(view.findViewById(R.id.layout_option_b))
         layoutOptions.add(view.findViewById(R.id.layout_option_c))
@@ -71,7 +71,7 @@ class SubmitQuestionFragment : Fragment(R.layout.fragment_submit_question) {
 
         radioButtons.addAll(listOf(radioA, radioB, radioC, radioD))
 
-        // 2. Configura a lógica de seleção de rádio e listeners de submissão
+        // Configura a lógica de seleção de rádio e listeners de submissão
         setOptionListeners()
         loadCurrentUserNickname()
 
@@ -130,13 +130,13 @@ class SubmitQuestionFragment : Fragment(R.layout.fragment_submit_question) {
 
         val selectedRadioId = checkedRadioId
 
-        // 1. Validação de Campos Vazios
+        // Validação de Campos Vazios
         if (questionText.isEmpty() || options.any { it.isEmpty() }) {
             Toast.makeText(context, "Preencha todos os campos da pergunta e opções.", Toast.LENGTH_SHORT).show()
             return
         }
 
-        // 2. Determinar o índice correto (Int)
+        // Determinar o índice correto (Int)
         val correctAnswerIndexInt = when (selectedRadioId) {
             R.id.radio_a -> 0
             R.id.radio_b -> 1
@@ -149,7 +149,7 @@ class SubmitQuestionFragment : Fragment(R.layout.fragment_submit_question) {
             }
         }
 
-        // 🌟 CORREÇÃO DE TIPO: Converter o Int para String para o modelo Pergunta.kt
+        // Converter o Int para String para o modelo Pergunta.kt
         val correctAnswerIndexString = correctAnswerIndexInt.toString()
 
         // Validação de Nickname
@@ -159,17 +159,16 @@ class SubmitQuestionFragment : Fragment(R.layout.fragment_submit_question) {
             return
         }
 
-        // 3. Criar e Submeter o objeto Pergunta
+        //Criar e Submeter o objeto Pergunta
         val newQuestion = Pergunta(
             questionText = questionText,
             options = options,
-            // 🛑 CORREÇÃO APLICADA: Passar a String em vez do Int
             correctAnswerIndex = correctAnswerIndexString,
             category = "Comunidade",
             creatorNickname = creator
         )
 
-        // 4. Submeter ao Repositório
+        //Submeter ao Repositório
         buttonSubmit.isEnabled = false
         repository.submitUserQuestion(newQuestion,
             onSuccess = {

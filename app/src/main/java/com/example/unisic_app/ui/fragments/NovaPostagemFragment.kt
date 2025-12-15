@@ -19,8 +19,7 @@ class NovaPostagemFragment : Fragment(R.layout.fragment_nova_postagem) {
 
     private val repository = FirebaseRepository()
 
-    // Supondo que a Postagem agora também tenha um título, vamos usar uma ViewModel ou
-    // capturar diretamente o EditText para simplificar (sem ViewBinding aqui).
+
     private lateinit var etTitle: EditText
     private lateinit var etContent: EditText
     private lateinit var btnPublish: Button
@@ -50,17 +49,17 @@ class NovaPostagemFragment : Fragment(R.layout.fragment_nova_postagem) {
 
 
 
-        // 2. Criar o objeto Postagem (Garantindo que comentários é uma lista vazia)
+        // Criar o objeto Postagem (Garantindo que comentários é uma lista vazia)
         val newPost = Postagem(
-            titulo = title, // 🚨 Você precisará adicionar 'titulo' ao seu data class Postagem
+            titulo = title,
             texto = content,
-            comentarios = emptyList() // ESSENCIAL: Array vazio, não Map!
+            comentarios = emptyList()
         )
 
         progressBar.visibility = View.VISIBLE
         btnPublish.isEnabled = false
 
-        // 3. Salvar no Firestore
+        // Salvar no Firestore
         repository.addPostagem(newPost,
             onSuccess = {
                 Toast.makeText(context, "Postagem publicada!", Toast.LENGTH_SHORT).show()

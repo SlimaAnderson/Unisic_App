@@ -1,6 +1,5 @@
 package com.example.unisic_app.data.model
 
-// data/model/VagaEmprego.kt
 data class VagaEmprego(
     val id: String? = null,
     val titulo: String = "",

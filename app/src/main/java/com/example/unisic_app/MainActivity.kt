@@ -5,16 +5,14 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.fragment.NavHostFragment
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import androidx.navigation.ui.setupWithNavController
-// ❌ REMOVA AS IMPORTAÇÕES DO FIREBASE E DA AUTHACTIVITY AQUI
+
 
 class MainActivity : AppCompatActivity() {
 
-    // ❌ REMOVA: private lateinit var auth: FirebaseAuth
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // 🌟 O CÓDIGO DE PROTEÇÃO DE ROTA FOI REMOVIDO
 
         setContentView(R.layout.activity_main)
 

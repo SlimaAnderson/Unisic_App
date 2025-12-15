@@ -434,8 +434,7 @@ class FirebaseRepository {
                 val perguntas = snapshot.documents.mapNotNull { document ->
                     val pergunta = document.toObject(Pergunta::class.java)
 
-                    // ✅ CORREÇÃO: Injeta o ID do documento. Isso resolve o Long to String,
-                    // a menos que o campo 'id' na data class Pergunta não seja String?.
+
                     pergunta?.copy(id = document.id)
                 }
                 onSuccess(perguntas.filterNotNull())
@@ -482,9 +481,7 @@ class FirebaseRepository {
                     try {
                         val moduloBase = document.toObject(ModuloCurso::class.java)
 
-                        // ✅ CORREÇÃO: Tentativa de ler Long e conversão para String.
-                        // Se "id" for Long no Firestore (e não String), isso resolve.
-                        // Caso contrário, usamos o ID do documento.
+
                         val firestoreIdLong = document.getLong("id")
                         val idParaModelo = firestoreIdLong?.toString() ?: document.id
 
@@ -513,7 +510,7 @@ class FirebaseRepository {
                     val modulo = try {
                         val moduloBase = document.toObject(ModuloCurso::class.java)
 
-                        // ✅ CORREÇÃO: Força a leitura do campo 'id' (Long) para String.
+
                         val firestoreIdLong = document.getLong("id")
                         val idParaModelo = firestoreIdLong?.toString() ?: document.id
 
@@ -592,7 +589,7 @@ class FirebaseRepository {
         onSuccess: (Progresso?) -> Unit,
         onFailure: (Exception) -> Unit
     ) {
-        // Uso de 'db' em vez de redefinir FirebaseFirestore.getInstance()
+
         db.collection("usuarios")
             .document(userId)
             .collection("progresso")

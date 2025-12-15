@@ -24,7 +24,7 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Referência às Views (Você deve criar o fragment_login.xml)
+        // Referência às Views
         inputEmail = view.findViewById(R.id.input_login_email)
         inputPassword = view.findViewById(R.id.input_login_password)
         btnLogin = view.findViewById(R.id.button_login)

@@ -3,7 +3,7 @@ package com.example.unisic_app.ui.adapter
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView // Importação necessária para o ícone fixado
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.navigation.NavController
 import androidx.recyclerview.widget.RecyclerView
@@ -20,8 +20,6 @@ class PostagemAdapter(
         val titulo: TextView = itemView.findViewById(R.id.text_post_titulo)
         val autor: TextView = itemView.findViewById(R.id.text_post_autor)
         val conteudo: TextView = itemView.findViewById(R.id.text_post_conteudo)
-
-        // 🌟 CORREÇÃO 1: Mapear o novo ícone fixado (Assumindo R.id.icon_post_pinned)
         val iconPinned: ImageView = itemView.findViewById(R.id.icon_post_pinned)
     }
 
@@ -34,15 +32,13 @@ class PostagemAdapter(
     override fun onBindViewHolder(holder: PostagemViewHolder, position: Int) {
         val postagem = listaPostagens[position]
 
-        // Tratamento da data (Removido o campo 'data' String do modelo, usando 'timestamp')
-        // Se você mudou para 'timestamp: Long' no modelo Postagem:
+
         // Validação da data
         val dataFormatada = if (postagem.timestamp > 0) {
             // Se o timestamp for válido, formata
             val date = java.util.Date(postagem.timestamp)
             java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale.getDefault()).format(date)
         } else {
-            // 🌟 CORREÇÃO: Removemos postagem.data e usamos uma string padrão para posts inválidos/antigos sem timestamp
             "Data Indisponível"
         }
 
@@ -51,10 +47,10 @@ class PostagemAdapter(
         holder.conteudo.text = postagem.texto
         holder.titulo.text = postagem.titulo
 
-        // 🌟 CORREÇÃO 2: Lógica para exibir o ícone 'fixado'
+        // Lógica para exibir o ícone 'fixado'
         if (postagem.isPinned) {
             holder.iconPinned.visibility = View.VISIBLE
-            // Opcional: Altere a cor de fundo ou título para destacar
+            // Altere a cor de fundo ou título para destacar
         } else {
             holder.iconPinned.visibility = View.GONE
         }

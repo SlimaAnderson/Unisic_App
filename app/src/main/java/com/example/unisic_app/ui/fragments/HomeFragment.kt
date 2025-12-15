@@ -34,21 +34,20 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     private var vagasListener: ListenerRegistration? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState) // Chamada obrigatória
+        super.onViewCreated(view, savedInstanceState)
 
-        // 🌟 CORREÇÃO 1: Inicialização das Views (Removida a linha de elipse)
+        //Inicialização das Views
         tvHeader = view.findViewById(R.id.text_home_header)
         rvNoticias = view.findViewById(R.id.recycler_view_noticias)
         rvVagas = view.findViewById(R.id.recycler_view_vagas)
 
-        // 1. Configurar Adapters
+        //Configurar Adapters
         setupAdapters()
 
-        // 2. Carregar Dados do Firestore
+        //Carregar Dados do Firestore
         loadDataFromFirestore()
     }
 
-    // 🌟 REMOVEMOS A FUNÇÃO setupNoticias() DUPLICADA QUE CAUSAVA O ERRO DE REFERÊNCIA
 
     private fun setupAdapters() {
         val noticiaClickListener: (Noticia) -> Unit = { noticia ->
@@ -58,12 +57,12 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
             abrirLink(vaga.urlInscricao)
         }
 
-        // Inicialize o adapter de Notícias com uma lista VAZIA.
+        // Inicializa o adapter de Notícias com uma lista VAZIA.
         noticiaAdapter = NoticiaAdapter(emptyList(), noticiaClickListener)
         rvNoticias.layoutManager = LinearLayoutManager(context)
         rvNoticias.adapter = noticiaAdapter
 
-        // Inicialize o adapter de Vagas com uma lista VAZIA.
+        // Inicializa o adapter de Vagas com uma lista VAZIA.
         vagaAdapter = VagaAdapter(emptyList(), vagaClickListener)
         // Layout horizontal para vagas
         rvVagas.layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)

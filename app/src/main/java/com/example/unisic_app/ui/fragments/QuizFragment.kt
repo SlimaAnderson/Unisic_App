@@ -24,18 +24,18 @@ class QuizFragment : Fragment(R.layout.fragment_quiz) {
     private lateinit var textResultadoFinal: TextView
     private lateinit var buttonReiniciar: Button
 
-    // NOVOS ELEMENTOS: FAB e Timer
+
     private lateinit var fabAddQuestion: FloatingActionButton
     private lateinit var textTimer: TextView
 
-    // Lista de botões de opção
+
     private val botoesOpcao = mutableListOf<Button>()
 
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 1. Mapeamento de Views
+        //Mapeamento de Views
         textPontuacao = view.findViewById(R.id.text_pontuacao)
         textPergunta = view.findViewById(R.id.text_pergunta)
         layoutOpcoes = view.findViewById(R.id.layout_opcoes)
@@ -43,7 +43,7 @@ class QuizFragment : Fragment(R.layout.fragment_quiz) {
         textResultadoFinal = view.findViewById(R.id.text_resultado_final)
         buttonReiniciar = view.findViewById(R.id.button_reiniciar_quiz)
 
-        // Mapeamento dos NOVOS elementos
+
         fabAddQuestion = view.findViewById(R.id.fab_add_question)
         textTimer = view.findViewById(R.id.text_quiz_timer)
 
@@ -51,13 +51,13 @@ class QuizFragment : Fragment(R.layout.fragment_quiz) {
         botoesOpcao.add(view.findViewById(R.id.button_opcao_a))
         botoesOpcao.add(view.findViewById(R.id.button_opcao_b))
         botoesOpcao.add(view.findViewById(R.id.button_opcao_c))
-        // 🌟 CORREÇÃO 1: Adicionando mapeamento para o quarto botão
+        // Adicionando mapeamento para o quarto botão
         botoesOpcao.add(view.findViewById(R.id.button_opcao_d))
 
-        // 2. Configura os Observadores (Observers)
+        //Configura os Observadores (Observers)
         configurarObservadores()
 
-        // 3. Configura os Listeners
+        //Configura os Listeners
         buttonReiniciar.setOnClickListener {
             viewModel.reiniciarQuiz()
         }
@@ -104,7 +104,7 @@ class QuizFragment : Fragment(R.layout.fragment_quiz) {
                     }
                 }
 
-                // 🌟 CORREÇÃO 2: Esconde botões extras se a pergunta tiver menos opções
+                //Esconde botões extras se a pergunta tiver menos opções
                 for (i in pergunta.options.size until botoesOpcao.size) {
                     botoesOpcao[i].visibility = View.GONE
                 }

@@ -42,13 +42,13 @@ class CursosAdapter(
         val context = holder.itemView.context
         val moduloCurso = modulosList[position]
 
-        // 💡 LENDO ID COMO STRING (DO MODELO CORRIGIDO)
+        // LENDO ID COMO STRING
         val moduleIdString = moduloCurso.id
 
-        // 1. Busca o status de progresso
+        // Busca o status de progresso
         val progresso = progressoUsuario.find { it.moduleId == moduleIdString }
 
-        // 2. Define a variável de status
+        // Define a variável de status
         val isCompletedStatus = progresso?.completed ?: false
 
         holder.titulo.text = moduloCurso.titulo
@@ -81,7 +81,7 @@ class CursosAdapter(
             }
 
             val bundle = Bundle().apply {
-                // ✅ CORREÇÃO CRÍTICA: ENVIANDO O ID COMO STRING (putString)
+
                 putString("moduloId", moduleIdString)
 
                 // Passa o status de conclusão.

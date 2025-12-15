@@ -1,5 +1,3 @@
-// ui/auth/AuthActivity.kt
-
 package com.example.unisic_app.ui.auth
 
 import android.content.Intent
@@ -15,7 +13,7 @@ class AuthActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_auth) // ⬅️ Você deve criar este layout
+        setContentView(R.layout.activity_auth)
 
         // Verifica se o usuário já está logado
         if (repository.getCurrentUserId() != null) {

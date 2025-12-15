@@ -11,7 +11,6 @@ class ForumViewModel : ViewModel() {
 
     private val repository = FirebaseRepository()
 
-    // LiveData que o Fragment observará
     private val _postagens = MutableLiveData<List<Postagem>>()
     val postagens: LiveData<List<Postagem>> = _postagens
 
@@ -32,7 +31,7 @@ class ForumViewModel : ViewModel() {
         }
     }
 
-    // 🌟 Importante: Fechar o listener quando o ViewModel for destruído.
+    //Fechar o listener quando o ViewModel for destruído.
     override fun onCleared() {
         super.onCleared()
         firestoreListener?.remove()

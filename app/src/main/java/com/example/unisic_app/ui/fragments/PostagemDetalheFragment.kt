@@ -16,20 +16,19 @@ import com.example.unisic_app.data.model.Comentario
 import com.example.unisic_app.data.model.Postagem
 import com.example.unisic_app.data.repository.FirebaseRepository
 import com.example.unisic_app.ui.adapter.ComentarioAdapter
-import com.example.unisic_app.ui.adapter.OnAutorClickListener // 🌟 Importa a Interface
+import com.example.unisic_app.ui.adapter.OnAutorClickListener
 import com.example.unisic_app.ui.auth.AuthActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.android.material.textfield.TextInputEditText
 import java.text.SimpleDateFormat
 import java.util.*
 
-// 🌟 O Fragmento implementa a interface de clique para comentários
 class PostagemDetalheFragment : Fragment(R.layout.fragment_postagem_detalhe), OnAutorClickListener {
 
     private val repository = FirebaseRepository()
 
     private lateinit var tvPostTitulo: TextView
-    private lateinit var tvPostAutorData: TextView // Exibe Nick e Data
+    private lateinit var tvPostAutorData: TextView
     private lateinit var tvPostContent: TextView
     private lateinit var rvComentarios: RecyclerView
     private lateinit var etComentario: EditText
@@ -39,28 +38,27 @@ class PostagemDetalheFragment : Fragment(R.layout.fragment_postagem_detalhe), On
     private var currentPost: Postagem? = null
     private lateinit var comentarioAdapter: ComentarioAdapter
 
-    // 🌟 NOVO: Variável para armazenar o UID do autor do post principal
     private var postAuthorUid: String? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 1. Inicializar Views
+        // Inicializar Views
         tvPostTitulo = view.findViewById(R.id.text_post_detalhe_titulo)
         tvPostAutorData = view.findViewById(R.id.text_post_detalhe_autor_data)
         tvPostContent = view.findViewById(R.id.text_post_detalhe_conteudo)
 
-        // 🌟 IDs Corrigidos
+        // IDs
         rvComentarios = view.findViewById(R.id.recycler_view_comentarios)
         etComentario = view.findViewById(R.id.input_comentario)
         btnComentar = view.findViewById(R.id.button_comentar)
 
-        // 2. Inicializar RecyclerView e Listener
+        // Inicializar RecyclerView e Listener
         comentarioAdapter = ComentarioAdapter(emptyList(), this)
         rvComentarios.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(context)
         rvComentarios.adapter = comentarioAdapter
 
-        // 3. Obter Argumentos (Verificação de segurança)
+        //Obter Argumentos (Verificação de segurança)
         val postId = arguments?.getString("postId")
 
         if (postId.isNullOrEmpty()) {
@@ -71,12 +69,11 @@ class PostagemDetalheFragment : Fragment(R.layout.fragment_postagem_detalhe), On
 
         currentPostId = postId
 
-        // 4. Carregar Conteúdo e Comentários
+        // Carregar Conteúdo e Comentários
         carregarDetalhesEComentarios(postId)
 
-        // 5. Configurar Listeners
+        // Configurar Listeners
 
-        // 🌟 NOVO LISTENER: Permite clicar no Nick/Data do autor do POST
         tvPostAutorData.setOnClickListener {
             if (postAuthorUid != null && postAuthorUid!!.isNotEmpty()) {
                 navigateToUserProfile(postAuthorUid!!)
@@ -94,7 +91,7 @@ class PostagemDetalheFragment : Fragment(R.layout.fragment_postagem_detalhe), On
     // LÓGICA DE NAVEGAÇÃO REUTILIZÁVEL
     // ---------------------------------------------------------------------
 
-    // 🌟 NOVO: Função de Navegação Reutilizável para Perfil
+    // Função de Navegação Reutilizável para Perfil
     private fun navigateToUserProfile(uid: String) {
         val bundle = Bundle().apply {
             putString("profileUid", uid)
@@ -131,8 +128,7 @@ class PostagemDetalheFragment : Fragment(R.layout.fragment_postagem_detalhe), On
 
                     comentarioAdapter.updateList(post.comentarios)
 
-                    // 🌟 CAPTURA O UID DO AUTOR DO POST (Se o Postagem data class tiver autorUid)
-                    // (O autorUid deve ser adicionado no Postagem data class quando ele é criado)
+                    //CAPTURA O UID DO AUTOR DO POST (Se o Postagem data class tiver autorUid)
                     postAuthorUid = post.autorUid
 
                 } else {
@@ -180,7 +176,7 @@ class PostagemDetalheFragment : Fragment(R.layout.fragment_postagem_detalhe), On
             data = data
         )
 
-        // 5. Lógica de Salvar Comentário no Repository
+        //ógica de Salvar Comentário no Repository
         repository.addComentarioToPost(postId, novoComentario,
             onSuccess = {
                 Toast.makeText(context, "Comentário adicionado!", Toast.LENGTH_SHORT).show()

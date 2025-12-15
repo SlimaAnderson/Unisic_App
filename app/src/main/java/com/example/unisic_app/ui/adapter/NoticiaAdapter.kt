@@ -1,4 +1,3 @@
-// ui/adapter/NoticiaAdapter.kt
 package com.example.unisic_app.ui.adapter
 
 import android.view.LayoutInflater

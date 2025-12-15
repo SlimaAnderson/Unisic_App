@@ -21,10 +21,9 @@ class CursosViewModel : ViewModel() {
     }
 
     private fun carregarModulos() {
-        // CORREÇÃO: Explicitando o tipo 'List<ModuloCurso>' para o parâmetro lambda
+        //xplicitando o tipo 'List<ModuloCurso>' para o parâmetro lambda
         modulosListener = repository.getModulosRealtime { modulosCarregados: List<ModuloCurso> ->
 
-            // CORREÇÃO: Uso correto da propriedade size da lista
             Log.d("CursosViewModel", "Módulos carregados: ${modulosCarregados.size}")
             _modulos.value = modulosCarregados
         }
@@ -32,7 +31,7 @@ class CursosViewModel : ViewModel() {
 
     override fun onCleared() {
         super.onCleared()
-        // Importante: Remover o listener para evitar vazamento de memória
+        //Remover o listener para evitar vazamento de memória
         modulosListener?.remove()
     }
 }

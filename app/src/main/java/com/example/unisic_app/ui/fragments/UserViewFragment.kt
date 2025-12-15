@@ -23,13 +23,13 @@ class UserViewFragment : Fragment(R.layout.fragment_user_view) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 1. Inicializar Views
+        //Inicializar Views
         textViewNick = view.findViewById(R.id.text_view_nick)
         textViewName = view.findViewById(R.id.text_view_name)
         textViewCompany = view.findViewById(R.id.text_view_company)
         textViewDescription = view.findViewById(R.id.text_view_description)
 
-        // 2. Obter o UID do Bundle
+        //Obter o UID do Bundle
         targetUid = arguments?.getString("profileUid")
 
         if (targetUid.isNullOrEmpty()) {
@@ -37,12 +37,12 @@ class UserViewFragment : Fragment(R.layout.fragment_user_view) {
             return
         }
 
-        // 3. Carregar e Exibir Dados
+        //Carregar e Exibir Dados
         loadProfileData(targetUid!!)
     }
 
     private fun loadProfileData(uid: String) {
-        // Carrega o Nick (Apelido)
+        // Carrega o Nick
         repository.getUserNickByUid(uid,
             onSuccess = { nick ->
                 textViewNick.text = "Apelido: $nick"

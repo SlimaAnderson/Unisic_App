@@ -16,7 +16,7 @@ class QuizViewModel : ViewModel() {
 
     private val repository = FirebaseRepository()
 
-    // --- LiveData de Estado do Quiz ---
+    // LiveData de Estado do Quiz
     private val _perguntas = MutableLiveData<List<Pergunta>>()
     private val _perguntaAtual = MutableLiveData<Pergunta?>()
     val perguntaAtual: LiveData<Pergunta?> = _perguntaAtual
@@ -27,7 +27,7 @@ class QuizViewModel : ViewModel() {
     private val _quizConcluido = MutableLiveData(false)
     val quizConcluido: LiveData<Boolean> = _quizConcluido
 
-    // --- Timer e Lógica de Dificuldade ---
+    //Timer e Lógica de Dificuldade
     private val INITIAL_TIME_PER_QUESTION_SECONDS = 45
     private val TIME_PENALTY_FOR_CORRECT_ANSWER_SECONDS = 1
     private val MIN_TIME_SECONDS = 5
@@ -100,7 +100,7 @@ class QuizViewModel : ViewModel() {
 
             override fun onFinish() {
                 Log.d("QuizVM", "Tempo esgotado.")
-                // 💡 Nota: Aqui estamos passando uma String vazia, pois não houve resposta real
+                //passando uma String vazia, pois não houve resposta real
                 verificarResposta("", isTimeUp = true)
             }
         }.start()
@@ -110,8 +110,7 @@ class QuizViewModel : ViewModel() {
         currentTimer?.cancel()
         val pergunta = _perguntaAtual.value ?: return
 
-        // 🌟 CORREÇÃO 1: Fazer a conversão segura de String? para Int.
-        // O campo agora é String? devido ao erro de desserialização anterior.
+
         val indiceCorreto = pergunta.correctAnswerIndex?.toIntOrNull()
 
         // Se o índice correto não puder ser convertido (indiceCorreto == null),
@@ -120,14 +119,13 @@ class QuizViewModel : ViewModel() {
             Log.e("QuizVM", "correctAnswerIndex inválido para conversão Int: ${pergunta.correctAnswerIndex}")
         }
 
-        // 🌟 CORREÇÃO 2: Obter o texto da resposta correta usando o índice convertido
+        // Obter o texto da resposta correta usando o índice convertido
         val respostaCorretaTexto = if (indiceCorreto != null) {
             pergunta.options.getOrNull(indiceCorreto)
         } else {
             null
         }
 
-        // 🌟 CORREÇÃO 3: Lógica de verificação
         // Aumenta a pontuação se não for tempo esgotado E a resposta do usuário corresponder ao texto da opção correta.
         if (!isTimeUp && respostaUsuario == respostaCorretaTexto) {
             _pontuacao.value = (_pontuacao.value ?: 0) + 1
